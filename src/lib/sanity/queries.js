@@ -4,7 +4,7 @@ export const homeQuery = `{
   "experience": *[_type == "experience"]|order(orderRank asc),
   "projects": *[_type == "post"]|order(featured desc, created desc){title,slug,imageUrl,mainImage{asset->{_id,url},alt},categories[]->{title},homepage,featured,subcategories[]->{title},created,body,links,summary},
   "skills": *[_type == "skillCategory"]|order(orderRank asc){title,skills},
-  "achievements": *[_type == "achievement"]|order(orderRank asc){title,detail,icon,logo},
+  "achievements": *[_type == "achievement"]|order(orderRank asc){title,detail,icon,logo,logoPath},
   "certifications": *[_type == "certification"]|order(orderRank asc){title,issuer,href,image},
   "socials": *[_type == "socialLink"]|order(orderRank asc){label,url}
 }`;

@@ -142,7 +142,9 @@
           {#each content.achievements as achievement}
           <Card className="textCard achievementCard">
             <div class="achievementBadge">
-              {#if achievement.logo}
+              {#if achievement.logoPath}
+                <img class="achievementLogo" src={achievement.logoPath} alt={`${achievement.logo} logo`} loading="lazy" />
+              {:else if achievement.logo}
                 <span class={`brandLogo ${achievement.logo.toLowerCase()}`}>{achievement.logo}</span>
               {:else if achievement.icon}
                 <span class="trophy">{achievement.icon}</span>
@@ -348,6 +350,17 @@
 
   .achievementBadge {
     min-height: 2rem;
+  }
+
+  .achievementLogo {
+    aspect-ratio: 220 / 64;
+    border-radius: 8px;
+    display: block;
+    height: auto !important;
+    object-fit: contain;
+    position: static !important;
+    scale: 1 !important;
+    width: min(10rem, 100%) !important;
   }
 
   .trophy {
