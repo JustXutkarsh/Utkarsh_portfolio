@@ -116,7 +116,7 @@ export const portfolioContent = {
     { logo: "Flipkart", logoPath: "/logos/flipkart.svg", title: "Flipkart GRID semi-finalist", detail: "Qualified from 35K+ teams; further finale process under evaluation for May 2026." },
     { logo: "MariaDB", logoPath: "/logos/mariadb.svg", title: "SkyVision: MariaDB Hackathon semi-finalist", detail: "International hackathon semi-finalist with 30K+ participants in 2025." },
     { icon: "🏆", title: "#6 intercollege hackathon", detail: "Ranked #6 across Pune colleges in a hackathon organized by Dr. D. Y. Patil Institute of Technology." },
-    { logo: "Smart India Hackathon", logoPath: "/logos/smart-india-hackathon.svg", title: "Smart India Hackathon 2025", detail: "Qualified till Stage 2." },
+    { logo: "Smart India Hackathon", logoPath: "/logos/smart-india-hackathon.png", title: "Smart India Hackathon 2025", detail: "Qualified till Stage 2." },
   ],
   certifications: [
     { title: "Supervised Machine Learning: Regression and Classification", issuer: "DeepLearning.AI, Stanford University, Coursera", href: "/certificates/coursera-supervised-ml.pdf" },
