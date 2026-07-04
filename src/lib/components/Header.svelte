@@ -214,18 +214,37 @@
   @media (max-width: 560px) {
     #header {
       border-radius: 18px;
-      padding: 0.5rem;
+      grid-template-columns: 1fr;
+      padding: 0.55rem;
+      row-gap: 0.4rem;
     }
 
     #logoHeader {
       height: 40px;
+      justify-self: center;
       width: 40px;
+    }
+
+    .buttons {
+      display: grid !important;
+      gap: 0.35rem;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      justify-content: stretch;
+      overflow: visible;
+      width: 100%;
+    }
+
+    .socials {
+      grid-column: auto;
+      overflow: visible;
+      width: 100% !important;
     }
 
     .headerButton,
     .socialText {
       font-size: 0.75rem;
-      padding: 0.55rem 0.6rem;
+      justify-content: center;
+      padding: 0.5rem 0.35rem;
     }
 
     .socialText span {

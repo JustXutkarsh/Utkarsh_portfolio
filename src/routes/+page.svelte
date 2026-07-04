@@ -178,13 +178,40 @@
 {/if}
 
 <style>
+  :global(#welcomeHeader) {
+    box-sizing: border-box;
+    height: auto;
+    min-height: 100svh;
+    padding: clamp(7rem, 12vh, 9rem) 0 clamp(3rem, 7vh, 5rem);
+  }
+
+  :global(#welcomeHeader .headerContent) {
+    margin: auto;
+    width: min(1180px, 92%);
+  }
+
   .brand {
     color: var(--color-secondary);
     font-size: 1rem;
     font-weight: 900;
     letter-spacing: 0;
-    margin: 0;
+    margin: 0 0 0.6rem;
     text-align: center;
+  }
+
+  :global(#welcomeHeader h1) {
+    font-size: clamp(4rem, 9vw, 8.5rem);
+    line-height: 0.95;
+    margin: 0;
+    text-align: left;
+  }
+
+  :global(#welcomeHeader h2) {
+    display: inline-block;
+    font-size: clamp(1.35rem, 3vw, 2.75rem);
+    line-height: 1.12;
+    margin: clamp(1.4rem, 4vh, 2.4rem) 0 0;
+    max-width: min(100%, 980px);
   }
 
   .heroText,
@@ -359,6 +386,23 @@
   }
 
   @media (max-width: 760px) {
+    :global(#welcomeHeader) {
+      padding-top: 10.5rem;
+    }
+
+    :global(#welcomeHeader h1),
+    :global(#welcomeHeader h2) {
+      text-align: center;
+    }
+
+    :global(#welcomeHeader h1) {
+      font-size: clamp(4.2rem, 18vw, 6.2rem);
+    }
+
+    :global(#welcomeHeader h2) {
+      font-size: clamp(1.2rem, 7vw, 1.75rem);
+    }
+
     .imageArea {
       height: 82vw;
       width: 82vw;
