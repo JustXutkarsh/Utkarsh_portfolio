@@ -111,7 +111,7 @@ export const portfolioContent = {
     Frontend: ["React", "SvelteKit", "TypeScript", "JavaScript"],
   },
   achievements: [
-    { logo: "Lovable", logoPath: "/logos/lovable.svg", title: "Lovable VibeHack 2025: #2", detail: "International virtual hackathon under Hack With India; secured 2nd place in 2025." },
+    { logo: "Lovable", logoPath: "/logos/lovable.png", title: "Lovable VibeHack 2025: #2", detail: "International virtual hackathon under Hack With India; secured 2nd place in 2025." },
     { logo: "Flipkart", logoPath: "/logos/flipkart.svg", title: "Flipkart GRID semi-finalist", detail: "Qualified from 35K+ teams; further finale process under evaluation for May 2026." },
     { logo: "MariaDB", logoPath: "/logos/mariadb.svg", title: "SkyVision: MariaDB Hackathon semi-finalist", detail: "International hackathon semi-finalist with 30K+ participants in 2025." },
     { icon: "🏆", title: "#6 intercollege hackathon", detail: "Ranked #6 across Pune colleges in a hackathon organized by Dr. D. Y. Patil Institute of Technology." },
