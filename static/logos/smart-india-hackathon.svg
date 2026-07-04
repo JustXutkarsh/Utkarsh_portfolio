@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 64" role="img" aria-label="Smart India Hackathon">
+  <rect width="220" height="64" rx="14" fill="#ffffff"/>
+  <rect x="16" y="12" width="44" height="40" rx="9" fill="#ff8a00"/>
+  <path fill="#0f172a" d="M27 22h7v7h-7zm9 0h7v7h-7zm9 0h7v7h-7zM27 32h7v10h-7zm9 0h7v10h-7zm9 0h7v10h-7z"/>
+  <text x="76" y="29" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="900">SMART INDIA</text>
+  <text x="76" y="48" fill="#2563eb" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="900">HACKATHON</text>
+</svg>
