@@ -62,8 +62,8 @@
   <div bind:this={content} id="content">
     {@render children?.()}
     <footer class="footer card">
-      <p class="altText">JustXutkarsh • Utkarsh Pandey • AI Engineer • Pune, India</p>
-      <div class="socials">
+      <p class="altText">Utkarsh Pandey • Pune, India</p>
+      <div class="footerLinks">
         {#each socials as social}
           <a href={social.url} target={social.url.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">{social.label}</a>
         {/each}
@@ -77,16 +77,21 @@
     aspect-ratio: unset;
     border-radius: 0;
     margin-bottom: 0;
-    padding: 1.5rem;
+    padding: 1.5rem 1rem 2rem;
     text-align: center;
     width: 100%;
   }
 
-  .socials {
+  .footerLinks {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 0.9rem;
     justify-content: center;
-    padding: 1rem;
+    padding-top: 0.75rem;
+  }
+
+  .footerLinks a {
+    display: inline-flex;
+    line-height: 1;
   }
 </style>
