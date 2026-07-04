@@ -1,0 +1,138 @@
+<script>
+  import Button from "$lib/components/Button.svelte";
+  import { projectImage } from "$lib/logic/data.js";
+  import { renderBody, formatDateTime } from "$lib/logic/formatter";
+  import gsap from "gsap";
+  import { onMount } from "svelte";
+
+  export let data;
+
+  let mainImage;
+
+  const project = data.project;
+
+  function onEnter() {
+    gsap.to(mainImage, {
+      filter: "blur(10px)",
+      duration: 0.3,
+    });
+  }
+
+  function onLeave() {
+    gsap.to(mainImage, {
+      filter: "blur(0px)",
+      duration: 0.3,
+    });
+  }
+
+  onMount(async () => {
+    await import("@google/model-viewer");
+  });
+</script>
+
+<svelte:head>
+  <title>{project.title} | Utkarsh Pandey</title>
+</svelte:head>
+<img
+  id="mainImage"
+  bind:this={mainImage}
+  loading="lazy"
+  fetchpriority="low"
+  src={projectImage(project)}
+  alt={project.mainImage?.alt || project.title}
+/>
+<div id="content">
+  <Button
+    text="Go Back"
+    className="goBack"
+    link="/goback"
+    on:mouseenter={onEnter}
+    on:mouseleave={onLeave}
+  ></Button>
+  <p id="date">{formatDateTime(project.created)}</p>
+  <h1 id="title">{project.title}</h1>
+  <div id="postCategories">
+    {#if project.featured}
+      <p class="tag" id="featured">Featured</p>
+    {/if}
+    {#each project.categories || [] as category}
+      <p class="tag">{category.title}</p>
+    {/each}
+  </div>
+  <div id="postSubCategories">
+    {#each project.subcategories || [] as subcategory}
+      <p class="tag1">{subcategory.title}</p>
+    {/each}
+  </div>
+  <div class="post-body">
+    {@html renderBody(project.body || [])}
+  </div>
+  <div class="postButtons">
+    {#each project.links || [] as button}
+      <Button link={button.url} text={button.label} className="postButton"
+      ></Button>
+    {/each}
+  </div>
+</div>
+
+<style>
+  #content {
+    padding: 4%;
+    padding-bottom: 0;
+  }
+
+  #mainImage {
+    border-radius: 0;
+    width: 100%;
+    height: 500px;
+    object-fit: cover;
+  }
+
+  #date {
+    font-size: larger;
+  }
+
+  #title {
+    font-size: 300%;
+    margin-top: 0;
+    margin-bottom: 15px;
+    width: 100%;
+  }
+
+  .tag {
+    width: auto !important;
+    padding: 10px !important;
+    background-color: var(--color-primary) !important;
+    color: var(--color-text) !important;
+    font-weight: bold;
+    margin-bottom: 0;
+  }
+
+  .tag1 {
+    padding: 20px !important;
+    background-color: var(--color-card) !important;
+    color: var(--color-text) !important;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 3px;
+    border: 1px solid var(--color-card-outline);
+    align-items: center;
+    display: flex;
+    margin-bottom: 0;
+  }
+
+  #postCategories,
+  #postSubCategories {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  @media (min-width: 1024px) {
+    #title {
+      font-size: 300%;
+    }
+  }
+</style>
