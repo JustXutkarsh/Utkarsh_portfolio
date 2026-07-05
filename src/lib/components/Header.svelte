@@ -62,6 +62,7 @@
     <button class="headerButton interactable" on:click={() => scrollTo("#projectsSection")}><span>Projects</span></button>
     <button class="headerButton interactable" on:click={() => scrollTo("#skillsSection")}><span>AI Stack</span></button>
     <a class="headerButton interactable" href="/archive"><span>Archive</span></a>
+    <button class="commandHint interactable" aria-label="Open command palette" on:click={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}>⌘K</button>
   </nav>
 
   <div class="socials" aria-label="Social links">
@@ -136,7 +137,8 @@
   }
 
   .headerButton,
-  .socialText {
+  .socialText,
+  .commandHint {
     align-items: center;
     border: 0;
     border-radius: 999px;
@@ -174,10 +176,19 @@
 
   .headerButton:hover,
   .socialText:hover,
+  .commandHint:hover,
   .headerButton:focus-visible,
-  .socialText:focus-visible {
+  .socialText:focus-visible,
+  .commandHint:focus-visible {
     background: var(--color-accent);
     color: var(--color-basic);
+  }
+
+  .commandHint {
+    border: 1px solid color-mix(in srgb, var(--color-accent), transparent 44%);
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    padding-inline: 0.58rem;
   }
 
   @media (max-width: 980px) {
@@ -230,7 +241,7 @@
     .buttons {
       display: grid !important;
       gap: 0.35rem;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       justify-content: stretch;
       overflow: visible;
       width: 100%;

@@ -12,7 +12,11 @@
   let projects = [];
   let metrics = [];
   let milestones = [];
-  let terminalText = "";
+  let terminalRows = [];
+  let terminalLiveText = "";
+  let terminalReady = false;
+  let terminalInput = "";
+  let terminalInputEl;
   let cleanup = [];
 
   const MAX_CATEGORIES = 2;
@@ -48,27 +52,64 @@
 
   function startTerminal(reducedMotion) {
     if (reducedMotion) {
-      terminalText = terminalLines[0];
+      terminalRows = terminalLines;
+      terminalReady = true;
       return;
     }
     let lineIndex = 0;
     let charIndex = 0;
-    let deleting = false;
     let timer;
     const step = () => {
       const line = terminalLines[lineIndex];
-      terminalText = line.slice(0, charIndex);
-      if (!deleting && charIndex < line.length) charIndex += 1;
-      else if (!deleting) deleting = true;
-      else if (charIndex > 0) charIndex -= 1;
-      else {
-        deleting = false;
-        lineIndex = (lineIndex + 1) % terminalLines.length;
+      terminalLiveText = line.slice(0, charIndex);
+      if (charIndex < line.length) {
+        charIndex += 1;
+        timer = window.setTimeout(step, 12);
+        return;
       }
-      timer = window.setTimeout(step, deleting ? 28 : 42);
+      terminalRows = [...terminalRows, line];
+      terminalLiveText = "";
+      lineIndex += 1;
+      charIndex = 0;
+      if (lineIndex >= terminalLines.length) {
+        terminalReady = true;
+        tick().then(() => terminalInputEl?.focus());
+        return;
+      }
+      timer = window.setTimeout(step, 180);
     };
     step();
     cleanup.push(() => window.clearTimeout(timer));
+  }
+
+  function terminalLinks(names) {
+    return names.map((name) => {
+      const project = projects.find((item) => item.title === name);
+      return project ? { label: project.title, href: `/projects/${project.slug.current}`, hint: project.summary } : null;
+    }).filter(Boolean);
+  }
+
+  function submitTerminal() {
+    const command = terminalInput.trim();
+    if (!command) return;
+    terminalRows = [...terminalRows, `$ ${command}`];
+    terminalInput = "";
+    const lower = command.toLowerCase();
+    if (lower === "whoami") {
+      terminalRows = [...terminalRows, "Utkarsh Pandey: AI engineer building LLM, RAG, agent, ML, and production automation systems."];
+    } else if (lower === "skills") {
+      terminalRows = [...terminalRows, "LLMs · RAG · multi-agent systems · vector search · ML forecasting · FastAPI · full-stack product delivery"];
+    } else if (lower === "projects") {
+      terminalRows = [...terminalRows, "projects:"];
+      terminalRows = [...terminalRows, ...terminalLinks(projects.map((item) => item.title))];
+    } else if (lower === "contact") {
+      terminalRows = [...terminalRows, "contact:", { label: "utkarshp034@gmail.com", href: "mailto:utkarshp034@gmail.com" }, { label: "GitHub", href: "https://github.com/JustXutkarsh" }, { label: "LinkedIn", href: "https://www.linkedin.com/in/utkarsh-pandey2005/" }];
+    } else if (lower === "help") {
+      terminalRows = [...terminalRows, "available commands: whoami, skills, projects, contact, help"];
+    } else {
+      terminalRows = [...terminalRows, `command not found: ${command}. try 'help'`];
+    }
+    tick().then(() => terminalInputEl?.focus());
   }
 
   function setupMotion(reducedMotion) {
@@ -200,7 +241,27 @@
         </div>
         <div class="terminalWindow heroReveal" aria-label="AI engineering terminal signature">
           <div class="terminalChrome"><span></span><span></span><span></span></div>
-          <code>{terminalText}<span class="terminalCursor">|</span></code>
+          <div class="terminalBody" role="button" tabindex="0" on:click={() => terminalInputEl?.focus()} on:keydown={(event) => {
+            if (event.key === "Enter" || event.key === " ") terminalInputEl?.focus();
+          }}>
+            {#each terminalRows as row}
+              {#if typeof row === "string"}
+                <p>{row}</p>
+              {:else}
+                <p><a href={row.href}>{row.label}</a>{#if row.hint}<span> — {row.hint}</span>{/if}</p>
+              {/if}
+            {/each}
+            {#if terminalLiveText}
+              <p>{terminalLiveText}<span class="terminalCursor">|</span></p>
+            {/if}
+            {#if terminalReady}
+              <form class="terminalPrompt" on:submit|preventDefault={submitTerminal}>
+                <label for="heroTerminalInput">$</label>
+                <input id="heroTerminalInput" bind:this={terminalInputEl} bind:value={terminalInput} autocomplete="off" spellcheck="false" aria-label="Type terminal command" />
+                <span class="terminalCursor">|</span>
+              </form>
+            {/if}
+          </div>
         </div>
       </div>
     </PageHeader>
@@ -441,7 +502,7 @@
     width: 0.72rem;
   }
 
-  .terminalWindow code {
+  .terminalBody {
     background: transparent;
     border: 0;
     box-shadow: none;
@@ -451,8 +512,44 @@
     font-size: clamp(0.78rem, 2vw, 1rem);
     line-height: 1.6;
     margin: 0;
-    min-height: 3.2rem;
+    max-height: 18rem;
+    min-height: 9rem;
+    overflow-y: auto;
     padding: 1rem;
+  }
+
+  .terminalBody p {
+    margin: 0 0 0.35rem;
+  }
+
+  .terminalBody a {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .terminalBody span {
+    color: var(--alt-text);
+  }
+
+  .terminalPrompt {
+    align-items: center;
+    display: flex;
+    gap: 0.45rem;
+    margin-top: 0.35rem;
+  }
+
+  .terminalPrompt label {
+    color: var(--color-accent);
+  }
+
+  .terminalPrompt input {
+    background: transparent;
+    border: 0;
+    color: var(--color-text);
+    flex: 1;
+    font: inherit;
+    min-width: 0;
+    outline: 0;
   }
 
   .terminalCursor {
