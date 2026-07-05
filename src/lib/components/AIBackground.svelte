@@ -10,23 +10,28 @@
     let height = 0;
     let nodes = [];
     let frame;
+    let lastDraw = 0;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const scale = Math.min(window.devicePixelRatio || 1, 1.5);
 
     function resize() {
-      width = canvas.width = window.innerWidth * devicePixelRatio;
-      height = canvas.height = window.innerHeight * devicePixelRatio;
+      width = canvas.width = window.innerWidth * scale;
+      height = canvas.height = window.innerHeight * scale;
       canvas.style.width = `${window.innerWidth}px`;
       canvas.style.height = `${window.innerHeight}px`;
-      nodes = Array.from({ length: Math.min(74, Math.floor(window.innerWidth / 18)) }, (_, i) => ({
+      nodes = Array.from({ length: Math.min(48, Math.floor(window.innerWidth / 26)) }, (_, i) => ({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.28 * devicePixelRatio,
-        vy: (Math.random() - 0.5) * 0.28 * devicePixelRatio,
-        r: (i % 5 === 0 ? 2.4 : 1.4) * devicePixelRatio,
+        vx: (Math.random() - 0.5) * 0.22 * scale,
+        vy: (Math.random() - 0.5) * 0.22 * scale,
+        r: (i % 5 === 0 ? 2.4 : 1.4) * scale,
       }));
     }
 
-    function draw() {
+    function draw(time = 0) {
+      frame = requestAnimationFrame(draw);
+      if (!reduced && time - lastDraw < 33) return;
+      lastDraw = time;
       const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = dark ? "#111929" : "#e4edff";
@@ -34,7 +39,7 @@
 
       const px = pointer.x * width;
       const py = pointer.y * height;
-      const scroll = window.scrollY * 0.05 * devicePixelRatio;
+      const scroll = window.scrollY * 0.05 * scale;
 
       nodes.forEach((node) => {
         if (!reduced) {
@@ -50,10 +55,10 @@
           const a = nodes[i];
           const b = nodes[j];
           const dist = Math.hypot(a.x - b.x, a.y - b.y);
-          if (dist < 155 * devicePixelRatio) {
-            const alpha = 1 - dist / (155 * devicePixelRatio);
+          if (dist < 135 * scale) {
+            const alpha = 1 - dist / (135 * scale);
             ctx.strokeStyle = dark ? `rgba(161,243,222,${alpha * 0.16})` : `rgba(34,89,197,${alpha * 0.14})`;
-            ctx.lineWidth = devicePixelRatio;
+            ctx.lineWidth = scale;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
@@ -63,7 +68,7 @@
       }
 
       nodes.forEach((node) => {
-        const active = Math.hypot(node.x - px, node.y - py) < 180 * devicePixelRatio;
+        const active = Math.hypot(node.x - px, node.y - py) < 160 * scale;
         ctx.fillStyle = active
           ? dark ? "rgba(255,139,113,0.85)" : "rgba(34,89,197,0.8)"
           : dark ? "rgba(161,243,222,0.48)" : "rgba(40,47,85,0.32)";
@@ -72,7 +77,6 @@
         ctx.fill();
       });
 
-      frame = requestAnimationFrame(draw);
     }
 
     function move(event) {

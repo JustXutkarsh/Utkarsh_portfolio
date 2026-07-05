@@ -1,16 +1,27 @@
 <script>
-  import { onMount } from "svelte";
+  import { onDestroy, onMount, tick } from "svelte";
   import { fetchHomeData, projectImage } from "$lib/logic/data.js";
   import { formatDateTime } from "$lib/logic/formatter";
   import Card from "$lib/components/Card.svelte";
   import Button from "$lib/components/Button.svelte";
   import PageHeader from "$lib/components/PageHeader.svelte";
   import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
 
   let content;
   let projects = [];
+  let metrics = [];
+  let milestones = [];
+  let terminalText = "";
+  let cleanup = [];
 
   const MAX_CATEGORIES = 2;
+  const terminalLines = [
+    "$ training catboost_model.pkl... ROC-AUC: 0.819",
+    "$ agent_pipeline: 7/7 agents online",
+    "$ ranking candidates... accuracy: 91.96%",
+    "$ deploying ai_receptionist... booking calls autonomously",
+  ];
   const getCategories = (post) => {
     const visible = post.categories?.slice(0, MAX_CATEGORIES) || [];
     return { visible, hiddenCount: (post.categories?.length || 0) - visible.length };
@@ -21,6 +32,124 @@
   const aboutText = (about) => Array.isArray(about)
     ? about.map((item) => typeof item === "string" ? item : item.children?.map((child) => child.text).join("")).filter(Boolean)
     : [];
+  const getMetrics = (achievements = []) => achievements.flatMap((item) => (item.metrics || []).map((metric) => ({ ...metric, source: item.title })));
+  const getMilestones = (achievements = []) => achievements
+    .filter((item) => item.milestoneTitle || item.milestoneDetail)
+    .map((item) => ({ date: item.milestoneDate, title: item.milestoneTitle || item.title, detail: item.milestoneDetail || item.detail }))
+    .sort((a, b) => Date.parse(`1 ${b.date}`) - Date.parse(`1 ${a.date}`));
+  const formatMetric = (value, precision = 0, suffix = "") => {
+    const number = Number(value || 0);
+    const formatted = number.toLocaleString("en-US", {
+      minimumFractionDigits: precision,
+      maximumFractionDigits: precision,
+    });
+    return `${formatted}${suffix || ""}`;
+  };
+
+  function startTerminal(reducedMotion) {
+    if (reducedMotion) {
+      terminalText = terminalLines[0];
+      return;
+    }
+    let lineIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+    let timer;
+    const step = () => {
+      const line = terminalLines[lineIndex];
+      terminalText = line.slice(0, charIndex);
+      if (!deleting && charIndex < line.length) charIndex += 1;
+      else if (!deleting) deleting = true;
+      else if (charIndex > 0) charIndex -= 1;
+      else {
+        deleting = false;
+        lineIndex = (lineIndex + 1) % terminalLines.length;
+      }
+      timer = window.setTimeout(step, deleting ? 28 : 42);
+    };
+    step();
+    cleanup.push(() => window.clearTimeout(timer));
+  }
+
+  function setupMotion(reducedMotion) {
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.from(".heroReveal", {
+      autoAlpha: 0,
+      y: reducedMotion ? 0 : 18,
+      duration: reducedMotion ? 0.01 : 0.5,
+      stagger: reducedMotion ? 0 : 0.08,
+      ease: "power2.out",
+    });
+
+    gsap.utils.toArray(".revealSection").forEach((section) => {
+      gsap.from(section, {
+        autoAlpha: 0,
+        y: reducedMotion ? 0 : 24,
+        duration: reducedMotion ? 0.01 : 0.5,
+        ease: "power2.out",
+        scrollTrigger: { trigger: section, start: "top 82%", once: true },
+      });
+    });
+
+    gsap.utils.toArray(".statNumber").forEach((node) => {
+      const target = Number(node.dataset.value || 0);
+      const precision = Number(node.dataset.precision || 0);
+      const suffix = node.dataset.suffix || "";
+      ScrollTrigger.create({
+        trigger: node,
+        start: "top 85%",
+        once: true,
+        onEnter: () => {
+          const state = { value: 0 };
+          gsap.to(state, {
+            value: target,
+            duration: reducedMotion ? 0.01 : 1.1,
+            ease: "power2.out",
+            onUpdate: () => node.textContent = formatMetric(state.value, precision, suffix),
+            onComplete: () => node.textContent = formatMetric(target, precision, suffix),
+          });
+        },
+      });
+    });
+
+    const line = document.querySelector(".timelineProgress");
+    if (line) {
+      gsap.fromTo(line, { scaleY: 0 }, {
+        scaleY: 1,
+        ease: "none",
+        scrollTrigger: { trigger: ".timeline", start: "top 75%", end: "bottom 35%", scrub: reducedMotion ? false : true },
+      });
+    }
+
+    gsap.utils.toArray(".timelineItem").forEach((item) => {
+      ScrollTrigger.create({
+        trigger: item,
+        start: "top 72%",
+        once: true,
+        onEnter: () => item.classList.add("isActive"),
+      });
+    });
+    ScrollTrigger.refresh();
+  }
+
+  function setupProjectTilt(reducedMotion) {
+    if (reducedMotion) return;
+    gsap.utils.toArray(".projectCard").forEach((card) => {
+      const move = (event) => {
+        const rect = card.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width - 0.5;
+        const y = (event.clientY - rect.top) / rect.height - 0.5;
+        gsap.to(card, { rotateY: x * 12, rotateX: y * -12, transformPerspective: 900, duration: 0.25, ease: "power2.out" });
+      };
+      const leave = () => gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.35, ease: "power2.out" });
+      card.addEventListener("mousemove", move);
+      card.addEventListener("mouseleave", leave);
+      cleanup.push(() => {
+        card.removeEventListener("mousemove", move);
+        card.removeEventListener("mouseleave", leave);
+      });
+    });
+  }
 
   function animateIn(e) {
     const info = e.currentTarget.querySelector(".info");
@@ -38,11 +167,20 @@
 
   onMount(async () => {
     content = await fetchHomeData();
+    metrics = getMetrics(content.achievements);
+    milestones = getMilestones(content.achievements);
     projects = [...(content.projects || [])].sort((a, b) => {
       if ((b.featured === true) !== (a.featured === true)) return (b.featured === true) - (a.featured === true);
       return new Date(b.created) - new Date(a.created);
     });
+    await tick();
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    startTerminal(reducedMotion);
+    setupMotion(reducedMotion);
+    setupProjectTilt(reducedMotion);
   });
+
+  onDestroy(() => cleanup.forEach((fn) => fn()));
 </script>
 
 <svelte:head>
@@ -54,18 +192,35 @@
     <PageHeader id="welcomeHeader">
       <div class="headerContent">
         <p class="brand">{content.hero.brand}</p>
-        <h1 class="emphasis">{content.hero.name}</h1>
-        <h2 class="emphasis">{content.hero.title}</h2>
-        <p class="heroText">{content.hero.subtitle}</p>
-        <div class="heroMeta">
+        <h1 class="emphasis heroReveal">{content.hero.name}</h1>
+        <h2 class="emphasis heroReveal">{content.hero.title}</h2>
+        <p class="heroText heroReveal">{content.hero.subtitle}</p>
+        <div class="heroMeta heroReveal">
           <span>{content.hero.location}</span>
+        </div>
+        <div class="terminalWindow heroReveal" aria-label="AI engineering terminal signature">
+          <div class="terminalChrome"><span></span><span></span><span></span></div>
+          <code>{terminalText}<span class="terminalCursor">|</span></code>
         </div>
       </div>
     </PageHeader>
 
-    <section id="aboutSection">
+    <section id="statsSection" class="revealSection">
+      <div class="statsGrid">
+        {#each metrics as metric}
+          <Card className="textCard statCard noBounce instantShow">
+            <p class="metricLabel">{metric.label}</p>
+            <p class="statNumber" data-value={metric.value} data-precision={metric.precision || 0} data-suffix={metric.suffix || ""}>
+              {formatMetric(0, metric.precision || 0, metric.suffix)}
+            </p>
+          </Card>
+        {/each}
+      </div>
+    </section>
+
+    <section id="aboutSection" class="revealSection">
       <h1 class="sectionTitle">- AI systems, end to end -</h1>
-      <Card hasSlug={false} className="aboutCard">
+      <Card hasSlug={false} className="aboutCard noBounce instantShow">
         <div id="aboutLayout">
           {#each aboutText(content.about) as paragraph}
             <p>{paragraph}</p>
@@ -74,11 +229,11 @@
       </Card>
     </section>
 
-    <section id="experienceSection">
+    <section id="experienceSection" class="revealSection">
       <h1 class="sectionTitle">- Engineering experience -</h1>
       <div class="sectionGrid">
         {#each content.experience as item}
-          <Card className="textCard">
+          <Card className="textCard noBounce instantShow">
             <p class="eyebrow">{item.period}</p>
             <h2>{item.role}</h2>
             <h3>{item.company}</h3>
@@ -92,11 +247,11 @@
       </div>
     </section>
 
-    <section id="projectsSection">
+    <section id="projectsSection" class="revealSection">
       <h1 class="sectionTitle">- Featured AI projects -</h1>
       <div class="flexCards">
         {#each projects.filter((post) => post.homepage) as post}
-          <Card id={post.slug.current}>
+          <Card id={post.slug.current} className="projectCard noBounce instantShow">
             <div class="imageArea" on:mouseenter={animateIn} on:mouseleave={animateOut} role="button" tabindex="0">
               <img id="mainImage" loading="lazy" fetchpriority="low" src={projectImage(post)} alt={post.mainImage?.alt || post.title} />
               <div class="info">
@@ -120,11 +275,11 @@
       </div>
     </section>
 
-    <section id="skillsSection">
+    <section id="skillsSection" class="revealSection">
       <h1 class="sectionTitle">- AI capability stack -</h1>
       <div class="sectionGrid">
         {#each skillsAsEntries(content.skills) as [group, skills]}
-          <Card className="textCard skillCard">
+          <Card className="textCard skillCard noBounce instantShow">
             <h2>{group}</h2>
             <div class="skillList">
               {#each skills as skill}
@@ -136,11 +291,26 @@
       </div>
     </section>
 
-    <section id="achievementsSection">
+    <section id="timelineSection" class="revealSection">
+      <h1 class="sectionTitle">- Milestone timeline -</h1>
+      <div class="timeline">
+        <div class="timelineTrack"><div class="timelineProgress"></div></div>
+        {#each milestones as milestone}
+          <article class="timelineItem">
+            <span class="timelineDot"></span>
+            <p class="metricLabel">{milestone.date}</p>
+            <h2>{milestone.title}</h2>
+            <p>{milestone.detail}</p>
+          </article>
+        {/each}
+      </div>
+    </section>
+
+    <section id="achievementsSection" class="revealSection">
       <h1 class="sectionTitle">- Achievements -</h1>
       <div class="sectionGrid achievementGrid">
           {#each content.achievements as achievement}
-          <Card className="textCard achievementCard">
+            <Card className="textCard achievementCard noBounce instantShow">
             <div class="achievementBadge">
               {#if achievement.logoPath}
                 <img class="achievementLogo" src={achievement.logoPath} alt={`${achievement.logo} logo`} loading="lazy" />
@@ -159,11 +329,11 @@
       </div>
     </section>
 
-    <section id="certificationsSection">
+    <section id="certificationsSection" class="revealSection">
       <h1 class="sectionTitle">- Certifications -</h1>
       <div class="sectionGrid">
         {#each content.certifications || [] as certificate}
-          <Card className="textCard certCard">
+          <Card className="textCard certCard noBounce instantShow">
             {#if certificate.image}
               <a href={certificate.href} target="_blank" rel="noopener noreferrer">
                 <img class="certPreview" src={certificate.image} alt={certificate.title} loading="lazy" />
@@ -244,6 +414,82 @@
     padding: 0.55rem 0.75rem;
   }
 
+  .terminalWindow {
+    background: color-mix(in srgb, var(--color-background), black 18%);
+    border: 1px solid color-mix(in srgb, var(--color-accent), transparent 55%);
+    border-radius: 18px;
+    box-shadow: 0 0 34px color-mix(in srgb, var(--color-accent), transparent 84%);
+    margin: clamp(1.5rem, 5vh, 3rem) auto 0;
+    max-width: 760px;
+    overflow: hidden;
+    text-align: left;
+  }
+
+  .terminalChrome {
+    align-items: center;
+    border-bottom: 1px solid var(--color-card-outline);
+    display: flex;
+    gap: 0.45rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .terminalChrome span {
+    background: var(--color-accent);
+    border-radius: 50%;
+    height: 0.72rem;
+    opacity: 0.85;
+    width: 0.72rem;
+  }
+
+  .terminalWindow code {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    color: var(--color-text);
+    display: block;
+    font-family: var(--font-mono);
+    font-size: clamp(0.78rem, 2vw, 1rem);
+    line-height: 1.6;
+    margin: 0;
+    min-height: 3.2rem;
+    padding: 1rem;
+  }
+
+  .terminalCursor {
+    animation: blink 1s steps(2, start) infinite;
+    color: var(--color-accent);
+  }
+
+  .statsGrid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    margin: auto;
+    width: min(1100px, 92%);
+  }
+
+  :global(.statCard) {
+    padding: 1.1rem;
+  }
+
+  .metricLabel {
+    color: var(--alt-text);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0;
+    margin: 0;
+    text-transform: uppercase;
+  }
+
+  .statNumber {
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: clamp(1.75rem, 4vw, 2.8rem);
+    font-weight: 800;
+    line-height: 1;
+    margin: 0.75rem 0 0;
+  }
+
   #aboutLayout,
   :global(.textCard) {
     font-size: 1.05rem;
@@ -287,6 +533,18 @@
     container-type: inline-size;
     height: 30vw;
     width: 30vw;
+  }
+
+  :global(.projectCard) {
+    outline-color: color-mix(in srgb, var(--color-card-outline), var(--color-accent) 18%);
+    transform-style: preserve-3d;
+    transition: box-shadow 180ms ease, outline-color 180ms ease;
+    will-change: transform;
+  }
+
+  :global(.projectCard:hover) {
+    box-shadow: 0 0 34px color-mix(in srgb, var(--color-accent), transparent 78%);
+    outline-color: var(--color-accent);
   }
 
   #mainImage {
@@ -384,6 +642,61 @@
     background: #003545;
   }
 
+  .timeline {
+    margin: auto;
+    max-width: 900px;
+    position: relative;
+    width: min(92%, 900px);
+  }
+
+  .timelineTrack {
+    background: var(--color-card-outline);
+    bottom: 1rem;
+    left: 0.45rem;
+    position: absolute;
+    top: 1rem;
+    width: 2px;
+  }
+
+  .timelineProgress {
+    background: var(--color-accent);
+    height: 100%;
+    transform-origin: top;
+    width: 100%;
+  }
+
+  .timelineItem {
+    margin-left: 2.4rem;
+    padding: 0 0 2rem;
+    position: relative;
+  }
+
+  .timelineDot {
+    background: var(--color-card);
+    border: 2px solid var(--color-card-outline);
+    border-radius: 50%;
+    height: 0.9rem;
+    left: -2.4rem;
+    position: absolute;
+    top: 0.25rem;
+    transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    width: 0.9rem;
+  }
+
+  :global(.timelineItem.isActive) .timelineDot {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--color-accent), transparent 35%);
+  }
+
+  .timelineItem h2 {
+    margin: 0.25rem 0;
+  }
+
+  .timelineItem p:last-child {
+    margin: 0;
+  }
+
   .certPreview {
     aspect-ratio: 16 / 10;
     border-radius: 10px;
@@ -421,9 +734,32 @@
       width: 82vw;
     }
 
+    .terminalWindow {
+      border-radius: 14px;
+    }
+
+    .statsGrid {
+      grid-template-columns: 1fr;
+    }
+
     .projectTitle {
       font-size: 17cqw;
     }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .terminalCursor {
+      animation: none;
+    }
+
+    :global(.projectCard) {
+      transform: none !important;
+      transition: none;
+    }
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
   }
 
   @media (min-width: 1024px) {

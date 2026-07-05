@@ -2,6 +2,8 @@
   --color-basic: rgb(255, 255, 255);
   --color-primary: rgb(114, 144, 206);
   --color-secondary: rgb(161, 243, 222);
+  --color-accent: rgb(161, 243, 222);
+  --font-mono: "IBM Plex Mono", "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
   --color-code-text: rgb(20, 15, 7);
   --color-code-title: rgb(18, 27, 85);
   --color-background: rgb(228, 237, 255);
@@ -21,6 +23,7 @@
     --color-basic: rgb(0, 0, 0);
     --color-primary: rgb(34, 89, 197);
     --color-secondary: rgb(255, 139, 113);
+    --color-accent: rgb(161, 243, 222);
     --color-background: rgb(17, 25, 41);
     --color-card: rgba(0, 0, 0, 0.548);
     --color-hovercard: rgba(3, 10, 27, 0.788);
@@ -157,7 +160,7 @@ blockquote {
   padding: 10px;
   margin-top: 25px;
   -webkit-backdrop-filter: blur(50px);
-  backdrop-filter: blur(50px);
+  backdrop-filter: blur(14px);
   box-shadow: 0px 0px 10px var(--color-shadow);
 }
 

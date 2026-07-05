@@ -173,8 +173,10 @@
   }
 
   .headerButton:hover,
-  .socialText:hover {
-    background: var(--color-primary);
+  .socialText:hover,
+  .headerButton:focus-visible,
+  .socialText:focus-visible {
+    background: var(--color-accent);
     color: var(--color-basic);
   }
 

@@ -111,10 +111,11 @@ export const portfolioContent = {
     Frontend: ["React", "SvelteKit", "TypeScript", "JavaScript"],
   },
   achievements: [
-    { logo: "Lovable", logoPath: "/logos/lovable.png", title: "Lovable VibeHack 2025: #2", detail: "International virtual hackathon under Hack With India; secured 2nd place in 2025." },
-    { logo: "Flipkart", logoPath: "/logos/flipkart.svg", title: "Flipkart GRID semi-finalist", detail: "Qualified from 35K+ teams; further finale process under evaluation for May 2026." },
-    { logo: "MariaDB", logoPath: "/logos/mariadb.png", title: "SkyVision: MariaDB Hackathon semi-finalist", detail: "International hackathon semi-finalist with 30K+ participants in 2025." },
-    { icon: "🏆", title: "#6 intercollege hackathon", detail: "Ranked #6 across Pune colleges in a hackathon organized by Dr. D. Y. Patil Institute of Technology." },
+    { logo: "Lovable", logoPath: "/logos/lovable.png", title: "Lovable VibeHack 2025: #2", detail: "International virtual hackathon under Hack With India; secured 2nd place in September 2025.", metrics: [{ label: "Teams beaten for 2nd place", value: 600, suffix: "+", precision: 0 }], milestoneDate: "Sep 2025", milestoneTitle: "VIBE Hacks 2025", milestoneDetail: "2nd place among 600+ teams" },
+    { logo: "Flipkart", logoPath: "/logos/flipkart.svg", title: "Flipkart GRID semi-finalist", detail: "Qualified from 35K+ teams in May 2026 with 91.96% accuracy.", metrics: [{ label: "Flipkart GRID participants", value: 35000, suffix: "+", precision: 0 }, { label: "Best model accuracy", value: 91.96, suffix: "%", precision: 2 }], milestoneDate: "May 2026", milestoneTitle: "Flipkart GRID / HackerEarth traffic prediction", milestoneDetail: "Semifinalist among 35,000+ participants; best score 91.96% accuracy" },
+    { logo: "MariaDB", logoPath: "/logos/mariadb.png", title: "SkyVision: MariaDB Hackathon finalist", detail: "International MariaDB hackathon finalist: top 70 among 30K+ participants in November 2025.", metrics: [{ label: "SkyVision CLIP relevance", value: 85, suffix: "%", precision: 0 }], milestoneDate: "Nov 2025", milestoneTitle: "SkyVision: MariaDB Hackathon", milestoneDetail: "Top 70 finalist among 30,000+ participants" },
+    { icon: "🏆", title: "#6 intercollege hackathon", detail: "Ranked #6 across Pune colleges in October 2025 in a hackathon organized by Dr. D. Y. Patil Institute of Technology.", milestoneDate: "Oct 2025", milestoneTitle: "InterCollege Hackathon", milestoneDetail: "6th among 200+ teams" },
+    { icon: "ML", title: "HackerEarth traffic prediction challenge", detail: "Same traffic forecasting challenge as Flipkart GRID; best score was 91.96% accuracy in May 2026.", metrics: [{ label: "CatBoost traffic ROC-AUC", value: 0.819, precision: 3 }] },
     { logo: "Smart India Hackathon", logoPath: "/logos/smart-india-hackathon.png", title: "Smart India Hackathon 2025", detail: "Qualified till Stage 2." },
   ],
   certifications: [
