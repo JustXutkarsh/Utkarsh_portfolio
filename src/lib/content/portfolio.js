@@ -116,7 +116,17 @@ export const portfolioContent = {
     { logo: "MariaDB", logoPath: "/logos/mariadb.png", title: "SkyVision: MariaDB Hackathon finalist", detail: "International MariaDB hackathon finalist: top 70 among 30K+ participants in November 2025.", metrics: [{ label: "SkyVision CLIP relevance", value: 85, suffix: "%", precision: 0 }], milestoneDate: "Nov 2025", milestoneTitle: "SkyVision: MariaDB Hackathon", milestoneDetail: "Top 70 finalist among 30,000+ participants" },
     { icon: "🏆", title: "#6 intercollege hackathon", detail: "Ranked #6 across Pune colleges in October 2025 in a hackathon organized by Dr. D. Y. Patil Institute of Technology.", milestoneDate: "Oct 2025", milestoneTitle: "InterCollege Hackathon", milestoneDetail: "6th among 200+ teams" },
     { icon: "ML", title: "HackerEarth traffic prediction challenge", detail: "Same traffic forecasting challenge as Flipkart GRID; best score was 91.96% accuracy in May 2026.", metrics: [{ label: "CatBoost traffic ROC-AUC", value: 0.819, precision: 3 }] },
-    { logo: "Smart India Hackathon", logoPath: "/logos/smart-india-hackathon.png", title: "Smart India Hackathon 2025", detail: "Qualified till Stage 2." },
+    {
+      logo: "Smart India Hackathon",
+      logoPath: "/logos/smart-india-hackathon.png",
+      title: "Smart India Hackathon 2025 - Stage 2 qualified",
+      detail: "Qualified till Stage 2 with Team No Semicolon for SIH25177, building a low-cost smart-vehicle navigation and collision-warning system using mobile GNSS, IMU sensor fusion, peer-to-peer/WebSocket data sharing, safe speed/distance alerts, and indoor base-station support.",
+      href: "/certificates/sih-2025-idea-presentation.pdf",
+      hrefLabel: "View SIH Deck",
+      milestoneDate: "Oct 2025",
+      milestoneTitle: "Smart India Hackathon 2025",
+      milestoneDetail: "Qualified till Stage 2 for a mobile GNSS + IMU collision-warning and autonomous navigation concept",
+    },
   ],
   certifications: [
     { title: "Supervised Machine Learning: Regression and Classification", issuer: "DeepLearning.AI, Stanford University, Coursera", href: "/certificates/coursera-supervised-ml.pdf" },

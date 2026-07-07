@@ -385,6 +385,9 @@
             {#if achievement.detail}
               <p>{achievement.detail}</p>
             {/if}
+            {#if achievement.href}
+              <a class="certLink" href={achievement.href} target="_blank" rel="noopener noreferrer">{achievement.hrefLabel || "View Details"}</a>
+            {/if}
           </Card>
           {/each}
       </div>
@@ -612,7 +615,7 @@
   .sectionGrid {
     display: grid;
     gap: 1.4rem;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
     margin: auto;
     width: min(1100px, 92%);
   }
@@ -628,11 +631,15 @@
 
   .imageArea {
     container-type: inline-size;
-    height: 30vw;
-    width: 30vw;
+    aspect-ratio: 16 / 11;
+    height: auto;
+    width: 100%;
   }
 
   :global(.projectCard) {
+    aspect-ratio: unset;
+    box-sizing: border-box;
+    min-height: 0;
     outline-color: color-mix(in srgb, var(--color-card-outline), var(--color-accent) 18%);
     transform-style: preserve-3d;
     transition: box-shadow 180ms ease, outline-color 180ms ease;
@@ -810,7 +817,7 @@
 
   @media (max-width: 760px) {
     :global(#welcomeHeader) {
-      padding-top: 10.5rem;
+      padding-top: 12.75rem;
     }
 
     :global(#welcomeHeader h1),
@@ -819,28 +826,45 @@
     }
 
     :global(#welcomeHeader h1) {
-      font-size: clamp(4.2rem, 18vw, 6.2rem);
+      font-size: clamp(3.4rem, 16vw, 5.6rem);
     }
 
     :global(#welcomeHeader h2) {
       font-size: clamp(1.2rem, 7vw, 1.75rem);
     }
 
-    .imageArea {
-      height: 82vw;
-      width: 82vw;
-    }
-
     .terminalWindow {
       border-radius: 14px;
     }
 
-    .statsGrid {
+    .statsGrid,
+    .sectionGrid {
       grid-template-columns: 1fr;
     }
 
     .projectTitle {
-      font-size: 17cqw;
+      font-size: clamp(2rem, 13cqw, 3.4rem);
+    }
+  }
+
+  @media (max-width: 430px) {
+    :global(#welcomeHeader) {
+      padding-top: 14rem;
+    }
+
+    .terminalBody {
+      max-height: 14rem;
+    }
+  }
+
+  @media (min-width: 761px) and (max-width: 1180px) {
+    :global(#welcomeHeader) {
+      padding-top: 8.75rem;
+    }
+
+    .sectionGrid,
+    .statsGrid {
+      width: min(94%, 1100px);
     }
   }
 

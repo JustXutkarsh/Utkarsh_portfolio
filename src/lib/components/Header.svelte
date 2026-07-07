@@ -254,7 +254,8 @@
     }
 
     .headerButton,
-    .socialText {
+    .socialText,
+    .commandHint {
       font-size: 0.75rem;
       justify-content: center;
       padding: 0.5rem 0.35rem;
@@ -262,6 +263,18 @@
 
     .socialText span {
       display: none;
+    }
+  }
+
+  @media (max-width: 390px) {
+    .headerButton,
+    .commandHint {
+      font-size: 0.68rem;
+      padding-inline: 0.18rem;
+    }
+
+    .socialText {
+      padding: 0.45rem 0.28rem;
     }
   }
 </style>

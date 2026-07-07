@@ -75,7 +75,7 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;
   color: var(--color-text);
   box-sizing: border-box;
   background-color: var(--color-background);
@@ -116,9 +116,10 @@ h1 {
 
 .flexCards {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-  width: 100%;
+  gap: clamp(1rem, 2.5vw, 2rem);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  margin: auto;
+  width: min(1120px, 92%);
 }
 
 body::-webkit-scrollbar {
