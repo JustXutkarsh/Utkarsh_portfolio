@@ -16,7 +16,7 @@
   const baseActions = [
     { label: "Jump to Home", hint: "/", run: () => goto("/") },
     { label: "Jump to Projects", hint: "#projects", run: () => jump("#projectsSection") },
-    { label: "Jump to AI Stack", hint: "#skills", run: () => jump("#skillsSection") },
+    { label: "Jump to Achievements", hint: "#achievements", run: () => jump("#achievementsSection") },
     { label: "Copy email to clipboard", hint: email, run: copyEmail },
     { label: "Open GitHub", hint: "github.com/JustXutkarsh", run: () => window.open(social("GitHub"), "_blank", "noopener,noreferrer") },
     { label: "Open LinkedIn", hint: "linkedin.com/in/utkarsh-pandey2005", run: () => window.open(social("LinkedIn"), "_blank", "noopener,noreferrer") },

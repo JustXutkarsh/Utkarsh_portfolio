@@ -50,7 +50,7 @@ export const portfolioContent = {
       slug: { current: "agentic-research-pro" },
       homepage: true,
       featured: true,
-      created: "2026-05-10T00:00:00.000Z",
+      created: "2026-01-01T00:00:00.000Z",
       imageUrl: "/images/projects/agentic-research-pro.svg",
       mainImage: { alt: "Agentic Research PRO autonomous research graph" },
       categories: [{ title: "AI Agents" }, { title: "Research" }],
@@ -115,7 +115,7 @@ export const portfolioContent = {
     { logo: "Flipkart", logoPath: "/logos/flipkart.svg", title: "Flipkart GRID semi-finalist", detail: "Qualified from 35K+ teams in May 2026 with 91.96% accuracy.", metrics: [{ label: "Flipkart GRID participants", value: 35000, suffix: "+", precision: 0 }, { label: "Best model accuracy", value: 91.96, suffix: "%", precision: 2 }], milestoneDate: "May 2026", milestoneTitle: "Flipkart GRID / HackerEarth traffic prediction", milestoneDetail: "Semifinalist among 35,000+ participants; best score 91.96% accuracy" },
     { logo: "MariaDB", logoPath: "/logos/mariadb.png", title: "SkyVision: MariaDB Hackathon finalist", detail: "International MariaDB hackathon finalist: top 70 among 30K+ participants in November 2025.", metrics: [{ label: "SkyVision: retrieval relevance (multimodal search evaluation)", value: 85, suffix: "%", precision: 0 }], milestoneDate: "Nov 2025", milestoneTitle: "SkyVision: MariaDB Hackathon", milestoneDetail: "Top 70 finalist among 30,000+ participants" },
     { icon: "🏆", title: "#6 intercollege hackathon", detail: "Ranked #6 across Pune colleges in October 2025 in a hackathon organized by Dr. D. Y. Patil Institute of Technology.", milestoneDate: "Oct 2025", milestoneTitle: "InterCollege Hackathon", milestoneDetail: "6th among 200+ teams" },
-    { icon: "ML", title: "HackerEarth traffic prediction challenge", detail: "Same traffic forecasting challenge as Flipkart GRID; best score was 91.96% accuracy in May 2026.", metrics: [{ label: "Traffic Prediction: ROC-AUC (classification performance)", value: 0.819, precision: 3 }] },
+    { icon: "ML", title: "HackerEarth traffic prediction challenge", detail: "Same traffic forecasting challenge as Flipkart GRID; best score was 91.96% accuracy in May 2026.", metrics: [{ label: "Traffic Prediction: ROC-AUC (classification performance)", value: 0.819, precision: 3 }], milestoneDate: "May 2026" },
     {
       logo: "Smart India Hackathon",
       logoPath: "/logos/smart-india-hackathon.png",

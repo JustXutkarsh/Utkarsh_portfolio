@@ -60,7 +60,7 @@
   <nav class="buttons" aria-label="Sections">
     <a class="headerButton interactable" href="/"><span>Home</span></a>
     <button class="headerButton interactable" on:click={() => scrollTo("#projectsSection")}><span>Projects</span></button>
-    <button class="headerButton interactable" on:click={() => scrollTo("#skillsSection")}><span>AI Stack</span></button>
+    <button class="headerButton interactable" on:click={() => scrollTo("#achievementsSection")}><span>Achievements</span></button>
     <button class="commandHint interactable" aria-label="Open command palette" on:click={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}>⌘K</button>
   </nav>
 

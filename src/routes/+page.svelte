@@ -10,7 +10,6 @@
   let content;
   let projects = [];
   let metrics = [];
-  let milestones = [];
   let terminalRows = [];
   let terminalLiveText = "";
   let terminalReady = false;
@@ -36,10 +35,11 @@
     ? about.map((item) => typeof item === "string" ? item : item.children?.map((child) => child.text).join("")).filter(Boolean)
     : [];
   const getMetrics = (achievements = []) => achievements.flatMap((item) => (item.metrics || []).map((metric) => ({ ...metric, source: item.title })));
-  const getMilestones = (achievements = []) => achievements
-    .filter((item) => item.milestoneTitle || item.milestoneDetail)
-    .map((item) => ({ date: item.milestoneDate, title: item.milestoneTitle || item.title, detail: item.milestoneDetail || item.detail }))
-    .sort((a, b) => Date.parse(`1 ${b.date}`) - Date.parse(`1 ${a.date}`));
+  const sortAchievements = (achievements = []) => [...achievements].sort((a, b) => {
+    const aTime = Date.parse(`1 ${a.milestoneDate || ""}`) || 0;
+    const bTime = Date.parse(`1 ${b.milestoneDate || ""}`) || 0;
+    return bTime - aTime;
+  });
   const formatMonthYear = (isoString) => new Date(isoString).toLocaleString(undefined, { month: "short", year: "numeric" });
   const formatMetric = (value, precision = 0, suffix = "") => {
     const number = Number(value || 0);
@@ -153,23 +153,6 @@
       });
     });
 
-    const line = document.querySelector(".timelineProgress");
-    if (line) {
-      gsap.fromTo(line, { scaleY: 0 }, {
-        scaleY: 1,
-        ease: "none",
-        scrollTrigger: { trigger: ".timeline", start: "top 75%", end: "bottom 35%", scrub: reducedMotion ? false : true },
-      });
-    }
-
-    gsap.utils.toArray(".timelineItem").forEach((item) => {
-      ScrollTrigger.create({
-        trigger: item,
-        start: "top 72%",
-        once: true,
-        onEnter: () => item.classList.add("isActive"),
-      });
-    });
     ScrollTrigger.refresh();
   }
 
@@ -192,24 +175,9 @@
     });
   }
 
-  function animateIn(e) {
-    const info = e.currentTarget.querySelector(".info");
-    const img = e.currentTarget.querySelector("#mainImage");
-    gsap.to(info, { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" });
-    gsap.to(img, { filter: "blur(10px)", duration: 0.3, ease: "power2.out" });
-  }
-
-  function animateOut(e) {
-    const info = e.currentTarget.querySelector(".info");
-    const img = e.currentTarget.querySelector("#mainImage");
-    gsap.to(info, { opacity: 0, scale: 0.9, duration: 0.3, ease: "power2.out" });
-    gsap.to(img, { filter: "blur(0px)", duration: 0.3, ease: "power2.out" });
-  }
-
   onMount(async () => {
     content = await fetchHomeData();
     metrics = getMetrics(content.achievements);
-    milestones = getMilestones(content.achievements);
     projects = [...(content.projects || [])].sort((a, b) => {
       if ((b.featured === true) !== (a.featured === true)) return (b.featured === true) - (a.featured === true);
       return new Date(b.created) - new Date(a.created);
@@ -313,7 +281,7 @@
       <div class="flexCards">
         {#each projects.filter((post) => post.homepage) as post}
           <Card id={post.slug.current} className="projectCard noBounce instantShow">
-            <div class="imageArea" on:mouseenter={animateIn} on:mouseleave={animateOut} role="button" tabindex="0">
+            <div class="imageArea" role="button" tabindex="0">
               <img id="mainImage" loading="lazy" fetchpriority="low" src={projectImage(post)} alt={post.mainImage?.alt || post.title} />
               <div class="info">
                 <div class="infoContent">
@@ -352,26 +320,13 @@
       </div>
     </section>
 
-    <section id="timelineSection" class="revealSection">
-      <h1 class="sectionTitle">- Milestone timeline -</h1>
-      <div class="timeline">
-        <div class="timelineTrack"><div class="timelineProgress"></div></div>
-        {#each milestones as milestone}
-          <article class="timelineItem">
-            <span class="timelineDot"></span>
-            <p class="metricLabel">{milestone.date}</p>
-            <h2>{milestone.title}</h2>
-            <p>{milestone.detail}</p>
-          </article>
-        {/each}
-      </div>
-    </section>
-
     <section id="achievementsSection" class="revealSection">
-      <h1 class="sectionTitle">- Achievements -</h1>
-      <div class="sectionGrid achievementGrid">
-          {#each content.achievements as achievement}
-            <Card className="textCard achievementCard noBounce instantShow">
+      <h1 class="sectionTitle">- Achievement timeline -</h1>
+      <div class="achievementTimeline">
+          {#each sortAchievements(content.achievements) as achievement}
+            <article class="achievementItem">
+            <span class="achievementMarker"></span>
+            <div class="achievementContent">
             <div class="achievementBadge">
               {#if achievement.logoPath}
                 <img class="achievementLogo" src={achievement.logoPath} alt={`${achievement.logo} logo`} loading="lazy" />
@@ -381,6 +336,9 @@
                 <span class="trophy">{achievement.icon}</span>
               {/if}
             </div>
+            {#if achievement.milestoneDate}
+              <p class="metricLabel">{achievement.milestoneDate}</p>
+            {/if}
             <h2>{achievement.title || achievement}</h2>
             {#if achievement.detail}
               <p>{achievement.detail}</p>
@@ -388,7 +346,8 @@
             {#if achievement.href}
               <a class="certLink" href={achievement.href} target="_blank" rel="noopener noreferrer">{achievement.hrefLabel || "View Details"}</a>
             {/if}
-          </Card>
+            </div>
+          </article>
           {/each}
       </div>
     </section>
@@ -632,6 +591,8 @@
   .imageArea {
     container-type: inline-size;
     aspect-ratio: 16 / 11;
+    display: grid;
+    gap: 0.85rem;
     height: auto;
     width: 100%;
   }
@@ -641,9 +602,11 @@
     box-sizing: border-box;
     min-height: 0;
     outline-color: color-mix(in srgb, var(--color-card-outline), var(--color-accent) 18%);
+    padding: 0.75rem;
     transform-style: preserve-3d;
     transition: box-shadow 180ms ease, outline-color 180ms ease;
     will-change: transform;
+    width: min(100%, 34rem);
   }
 
   :global(.projectCard:hover) {
@@ -652,38 +615,43 @@
   }
 
   #mainImage {
+    aspect-ratio: 16 / 10;
+    border-radius: 14px;
+    height: auto;
+    object-fit: cover;
+    position: static;
     width: 100%;
   }
 
   .info {
-    align-items: center;
-    background: linear-gradient(to bottom, var(--color-hovercard) 35%, transparent);
-    border-radius: 20px;
-    height: 92%;
-    justify-content: center;
-    left: 0;
-    opacity: 0;
-    overflow: hidden;
-    padding: 4%;
-    position: absolute;
-    scale: 0.95;
+    align-items: stretch;
+    background: transparent;
+    border-radius: 0;
+    height: auto;
+    justify-content: start;
+    opacity: 1 !important;
+    overflow: visible;
+    padding: 0.25rem 0.2rem 0.4rem;
+    position: static;
+    scale: 1;
     text-align: center;
-    top: 0;
-    width: 92%;
+    width: auto;
     z-index: 3;
   }
 
   .infoContent {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    justify-content: space-between;
-    scale: 0.9;
+    gap: 0.9rem;
+    height: auto;
+    justify-content: start;
+    scale: 1;
     width: 100%;
   }
 
   .projectTitle {
-    font-size: 14cqw;
+    font-size: clamp(1.85rem, 6cqw, 3.3rem);
+    line-height: 1;
     margin: 0;
     text-align: left;
     width: 100%;
@@ -691,7 +659,9 @@
   }
 
   .summary {
-    font-size: 4cqw;
+    font-size: clamp(0.92rem, 2cqw, 1.05rem);
+    line-height: 1.45;
+    margin: 0.5rem 0 0;
     text-align: left;
   }
 
@@ -701,17 +671,59 @@
     gap: 0.7rem;
   }
 
-  .achievementGrid {
-    align-items: stretch;
-  }
-
   :global(.achievementCard),
   :global(.certCard) {
     overflow: hidden;
   }
 
+  .achievementTimeline {
+    margin: auto;
+    max-width: 1120px;
+    padding: 0.5rem 0 1rem;
+    position: relative;
+    width: min(92%, 1120px);
+  }
+
+  .achievementTimeline::before {
+    background: linear-gradient(to bottom, var(--color-accent), color-mix(in srgb, var(--color-accent), transparent 82%));
+    border-radius: 999px;
+    bottom: 0;
+    content: "";
+    left: 1.05rem;
+    position: absolute;
+    top: 1.2rem;
+    width: 3px;
+  }
+
+  .achievementItem {
+    display: grid;
+    gap: clamp(1rem, 3vw, 1.8rem);
+    grid-template-columns: 2.4rem minmax(0, 1fr);
+    margin-bottom: clamp(1.7rem, 5vw, 3.2rem);
+    position: relative;
+  }
+
+  .achievementMarker {
+    background: var(--color-accent);
+    border-radius: 50%;
+    box-shadow: 0 0 22px color-mix(in srgb, var(--color-accent), transparent 30%);
+    height: 1.35rem;
+    margin-left: 0.4rem;
+    margin-top: 0.35rem;
+    position: relative;
+    width: 1.35rem;
+    z-index: 1;
+  }
+
+  .achievementContent {
+    max-width: 980px;
+  }
+
   .achievementBadge {
+    align-items: center;
+    display: flex;
     min-height: 2rem;
+    margin-bottom: 0.55rem;
   }
 
   .achievementLogo {
@@ -722,7 +734,7 @@
     object-fit: contain;
     position: static !important;
     scale: 1 !important;
-    width: min(10rem, 100%) !important;
+    width: min(9rem, 100%) !important;
   }
 
   .trophy {
@@ -746,61 +758,6 @@
     background: #003545;
   }
 
-  .timeline {
-    margin: auto;
-    max-width: 900px;
-    position: relative;
-    width: min(92%, 900px);
-  }
-
-  .timelineTrack {
-    background: var(--color-card-outline);
-    bottom: 1rem;
-    left: 0.45rem;
-    position: absolute;
-    top: 1rem;
-    width: 2px;
-  }
-
-  .timelineProgress {
-    background: var(--color-accent);
-    height: 100%;
-    transform-origin: top;
-    width: 100%;
-  }
-
-  .timelineItem {
-    margin-left: 2.4rem;
-    padding: 0 0 2rem;
-    position: relative;
-  }
-
-  .timelineDot {
-    background: var(--color-card);
-    border: 2px solid var(--color-card-outline);
-    border-radius: 50%;
-    height: 0.9rem;
-    left: -2.4rem;
-    position: absolute;
-    top: 0.25rem;
-    transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-    width: 0.9rem;
-  }
-
-  :global(.timelineItem.isActive) .timelineDot {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    box-shadow: 0 0 20px color-mix(in srgb, var(--color-accent), transparent 35%);
-  }
-
-  .timelineItem h2 {
-    margin: 0.25rem 0;
-  }
-
-  .timelineItem p:last-child {
-    margin: 0;
-  }
-
   .certPreview {
     aspect-ratio: 16 / 10;
     border-radius: 10px;
@@ -813,6 +770,27 @@
   .certLink {
     display: inline-block;
     margin-top: 0.5rem;
+  }
+
+  .achievementContent h2 {
+    font-size: clamp(1.7rem, 4vw, 3rem);
+    line-height: 1.05;
+    margin: 0.15rem 0 0.35rem;
+  }
+
+  .achievementContent p:not(.metricLabel) {
+    font-size: clamp(1rem, 2vw, 1.35rem);
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  :global(.projectCard #readmore) {
+    border-radius: 12px;
+    font-size: 1rem;
+    height: auto;
+    min-height: 2.75rem;
+    padding: 0.65rem 0.9rem;
+    width: 100%;
   }
 
   @media (max-width: 760px) {
