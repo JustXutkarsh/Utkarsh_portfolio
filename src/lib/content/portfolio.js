@@ -107,7 +107,7 @@ export const portfolioContent = {
     "Machine Learning": ["Deep Learning", "PyTorch", "TensorFlow", "Scikit-learn", "XGBoost", "Pandas", "NumPy"],
     Backend: ["Python", "FastAPI", "Node", "REST APIs", "Authentication"],
     Databases: ["PostgreSQL", "Supabase", "ChromaDB", "Redis"],
-    Infrastructure: ["Docker", "Git", "AWS", "Vercel", "Render"],
+    Infrastructure: ["Docker", "Git", "GCP", "Vercel", "Render"],
     Frontend: ["React", "SvelteKit", "TypeScript", "JavaScript"],
   },
   achievements: [

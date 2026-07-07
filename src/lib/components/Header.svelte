@@ -240,7 +240,7 @@
     .buttons {
       display: grid !important;
       gap: 0.35rem;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: 0.9fr 1fr 1.45fr 0.62fr;
       justify-content: stretch;
       overflow: visible;
       width: 100%;
