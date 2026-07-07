@@ -11,25 +11,29 @@
     }
 
     let pointerWrapper;
+    let touchCursor = false;
 
     onMount(() => {
         pointerWrapper.style.display = "none";
+        touchCursor = window.matchMedia("(pointer: coarse)").matches;
+
+        let mouseX = 0,
+            mouseY = 0;
 
         function updateCursor(e) {
             if (!pointerWrapper) {
                 return;
             }
-            if (e.pointerType === "mouse") {
+            if (e.pointerType === "mouse" || e.pointerType === "touch") {
                 pointerWrapper.style.display = "block";
-            } else if (e.pointerType === "touch") {
-                pointerWrapper.style.display = "none";
+                mouseX = e.clientX;
+                mouseY = e.clientY;
             }
         }
 
         window.addEventListener("pointermove", updateCursor);
+        window.addEventListener("pointerdown", updateCursor);
 
-        let mouseX = 0,
-            mouseY = 0;
         let currentX = 0,
             currentY = 0;
 
@@ -161,7 +165,7 @@
     });
 </script>
 
-<div bind:this={pointerWrapper} class="pointer-wrapper">
+<div bind:this={pointerWrapper} class="pointer-wrapper" class:touchCursor>
     <svg viewBox="0 0 1080 1080">
         <path
             id="cursorPath"
@@ -206,5 +210,11 @@
     .pointer-wrapper svg {
         width: 100%;
         height: 100%;
+    }
+
+    .touchCursor {
+        height: 28px;
+        opacity: 0.82;
+        width: 28px;
     }
 </style>

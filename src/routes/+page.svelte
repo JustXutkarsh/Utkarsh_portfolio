@@ -1,7 +1,6 @@
 <script>
   import { onDestroy, onMount, tick } from "svelte";
   import { fetchHomeData, projectImage } from "$lib/logic/data.js";
-  import { formatDateTime } from "$lib/logic/formatter";
   import Card from "$lib/components/Card.svelte";
   import Button from "$lib/components/Button.svelte";
   import PageHeader from "$lib/components/PageHeader.svelte";
@@ -41,6 +40,7 @@
     .filter((item) => item.milestoneTitle || item.milestoneDetail)
     .map((item) => ({ date: item.milestoneDate, title: item.milestoneTitle || item.title, detail: item.milestoneDetail || item.detail }))
     .sort((a, b) => Date.parse(`1 ${b.date}`) - Date.parse(`1 ${a.date}`));
+  const formatMonthYear = (isoString) => new Date(isoString).toLocaleString(undefined, { month: "short", year: "numeric" });
   const formatMetric = (value, precision = 0, suffix = "") => {
     const number = Number(value || 0);
     const formatted = number.toLocaleString("en-US", {
@@ -318,7 +318,7 @@
               <div class="info">
                 <div class="infoContent">
                   <div>
-                    <p id="date">{formatDateTime(post.created)}</p>
+                    <p id="date">{formatMonthYear(post.created)}</p>
                     <div id="postCategories">
                       {#if post.featured}<div><p id="featured">Featured</p></div>{/if}
                       {#each getCategories(post).visible as category}<div><p>{category.title}</p></div>{/each}
@@ -844,6 +844,73 @@
 
     .projectTitle {
       font-size: clamp(2rem, 13cqw, 3.4rem);
+    }
+  }
+
+  @media (hover: none), (max-width: 760px) {
+    :global(.projectCard) {
+      padding: 0.65rem;
+      transform: none !important;
+      width: min(100%, 34rem);
+    }
+
+    .imageArea {
+      aspect-ratio: unset;
+      display: grid;
+      gap: 0.85rem;
+    }
+
+    #mainImage {
+      aspect-ratio: 16 / 10;
+      border-radius: 14px;
+      height: auto;
+      object-fit: cover;
+      position: static;
+    }
+
+    .info {
+      align-items: stretch;
+      background: transparent;
+      border-radius: 0;
+      height: auto;
+      justify-content: start;
+      left: auto;
+      opacity: 1 !important;
+      overflow: visible;
+      padding: 0.25rem 0.2rem 0.4rem;
+      position: static;
+      scale: 1 !important;
+      text-align: left;
+      top: auto;
+      width: auto;
+    }
+
+    .infoContent {
+      gap: 0.9rem;
+      height: auto;
+      justify-content: start;
+      scale: 1;
+    }
+
+    .projectTitle {
+      font-size: clamp(1.8rem, 11vw, 3rem);
+      line-height: 1;
+      margin-top: 0.35rem;
+    }
+
+    .summary {
+      font-size: 0.92rem;
+      line-height: 1.45;
+      margin: 0.5rem 0 0;
+    }
+
+    :global(#readmore) {
+      border-radius: 12px;
+      font-size: 1rem;
+      height: auto;
+      min-height: 2.75rem;
+      padding: 0.65rem 0.9rem;
+      width: 100%;
     }
   }
 

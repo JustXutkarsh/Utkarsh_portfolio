@@ -46,7 +46,7 @@ const docs = [
   ...portfolioContent.achievements.map((item, index) => ({ _id: `achievement-${index}`, _type: "achievement", ...item, orderRank: index })),
   ...portfolioContent.certifications.map((item, index) => ({ _id: `certification-${index}`, _type: "certification", ...item, orderRank: index })),
   ...portfolioContent.socials.map((item, index) => ({ _id: `social-${index}`, _type: "socialLink", ...item, orderRank: index })),
-  ...["Home:/", "Projects:#projectsSection", "AI Stack:#skillsSection", "Archive:/archive"].map((item, index) => {
+  ...["Home:/", "Projects:#projectsSection", "AI Stack:#skillsSection"].map((item, index) => {
     const [label, href] = item.split(":");
     return { _id: `navigation-${index}`, _type: "navigation", label, href, orderRank: index };
   }),

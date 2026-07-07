@@ -61,7 +61,6 @@
     <a class="headerButton interactable" href="/"><span>Home</span></a>
     <button class="headerButton interactable" on:click={() => scrollTo("#projectsSection")}><span>Projects</span></button>
     <button class="headerButton interactable" on:click={() => scrollTo("#skillsSection")}><span>AI Stack</span></button>
-    <a class="headerButton interactable" href="/archive"><span>Archive</span></a>
     <button class="commandHint interactable" aria-label="Open command palette" on:click={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}>⌘K</button>
   </nav>
 
@@ -241,7 +240,7 @@
     .buttons {
       display: grid !important;
       gap: 0.35rem;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       justify-content: stretch;
       overflow: visible;
       width: 100%;
