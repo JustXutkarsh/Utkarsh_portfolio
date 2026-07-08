@@ -78,9 +78,17 @@
 
 <style>
   #header {
-    background: color-mix(in srgb, var(--color-background), var(--color-card) 42%);
-    border: 1px solid color-mix(in srgb, var(--color-primary), white 34%);
-    box-shadow: 0 18px 55px color-mix(in srgb, var(--color-primary), transparent 70%);
+    -webkit-backdrop-filter: blur(28px) saturate(185%) contrast(1.08);
+    backdrop-filter: blur(28px) saturate(185%) contrast(1.08);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08) 42%, rgba(161, 243, 222, 0.12)),
+      color-mix(in srgb, var(--color-background), transparent 62%);
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    border-radius: 999px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.72),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+      0 18px 55px color-mix(in srgb, var(--color-primary), transparent 74%);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -97,6 +105,34 @@
     top: 1rem;
     transform: translateX(-50%);
     width: min(calc(100vw - 2rem), 1320px);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  #header::before,
+  #header::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  #header::before {
+    background:
+      radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.72), transparent 24%),
+      radial-gradient(circle at 86% 110%, color-mix(in srgb, var(--color-accent), transparent 58%), transparent 34%),
+      linear-gradient(100deg, transparent 8%, rgba(255, 255, 255, 0.22) 46%, transparent 62%);
+    opacity: 0.86;
+  }
+
+  #header::after {
+    inset: 1px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow:
+      inset 12px 12px 34px rgba(255, 255, 255, 0.08),
+      inset -14px -12px 28px rgba(0, 0, 0, 0.16);
   }
 
   #logoHeader {
@@ -141,7 +177,7 @@
     align-items: center;
     border: 0;
     border-radius: 999px;
-    background: transparent;
+    background: rgba(255, 255, 255, 0.02);
     color: var(--title-text);
     cursor: pointer;
     display: inline-flex;
@@ -157,6 +193,7 @@
     text-align: center;
     text-decoration: none;
     width: auto !important;
+    transition: background 0.22s ease, box-shadow 0.22s ease, color 0.22s ease;
   }
 
   .socialText svg {
@@ -179,8 +216,13 @@
   .headerButton:focus-visible,
   .socialText:focus-visible,
   .commandHint:focus-visible {
-    background: var(--color-accent);
-    color: var(--color-basic);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.45), color-mix(in srgb, var(--color-accent), transparent 72%));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.65),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.18),
+      0 10px 28px color-mix(in srgb, var(--color-accent), transparent 78%);
+    color: var(--title-text);
   }
 
   .commandHint {
