@@ -108,7 +108,7 @@ export const portfolioContent = {
     Backend: ["Python", "FastAPI", "Node", "REST APIs", "Authentication"],
     Databases: ["PostgreSQL", "Supabase", "ChromaDB", "Redis"],
     Infrastructure: ["Docker", "Git", "GCP", "Vercel", "Render"],
-    Frontend: ["React", "SvelteKit", "TypeScript", "JavaScript"],
+    Frontend: ["React", "SvelteKit", "TypeScript", "JavaScript", "UI/UX", "Figma"],
   },
   achievements: [
     { logo: "Lovable", logoPath: "/logos/lovable.png", title: "Lovable VibeHack 2025: #2", detail: "International virtual hackathon under Hack With India; secured 2nd place in September 2025.", metrics: [{ label: "Teams beaten for 2nd place", value: 600, suffix: "+", precision: 0 }], milestoneDate: "Sep 2025", milestoneTitle: "VIBE Hacks 2025", milestoneDetail: "2nd place among 600+ teams" },
