@@ -73,7 +73,6 @@
       charIndex = 0;
       if (lineIndex >= terminalLines.length) {
         terminalReady = true;
-        tick().then(() => terminalInputEl?.focus());
         return;
       }
       timer = window.setTimeout(step, 180);
@@ -109,7 +108,7 @@
     } else {
       terminalRows = [...terminalRows, `command not found: ${command}. try 'help'`];
     }
-    tick().then(() => terminalInputEl?.focus());
+    tick().then(() => terminalInputEl?.focus({ preventScroll: true }));
   }
 
   function setupMotion(reducedMotion) {
@@ -209,8 +208,8 @@
         </div>
         <div class="terminalWindow heroReveal" aria-label="AI engineering terminal signature">
           <div class="terminalChrome"><span></span><span></span><span></span></div>
-          <div class="terminalBody" role="button" tabindex="0" on:click={() => terminalInputEl?.focus()} on:keydown={(event) => {
-            if (event.key === "Enter" || event.key === " ") terminalInputEl?.focus();
+          <div class="terminalBody" role="button" tabindex="0" on:click={() => terminalInputEl?.focus({ preventScroll: true })} on:keydown={(event) => {
+            if (event.key === "Enter" || event.key === " ") terminalInputEl?.focus({ preventScroll: true });
           }}>
             {#each terminalRows as row}
               {#if typeof row === "string"}
