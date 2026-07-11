@@ -133,7 +133,7 @@ export const portfolioContent = {
     { title: "Using OpenAI APIs: Exploring APIs with the OpenAI Playground", issuer: "Skillsoft", href: "/certificates/skillsoft-openai-playground.png", image: "/certificates/skillsoft-openai-playground.png" },
     { title: "Introduction to Model Context Protocol", issuer: "Anthropic Education", href: "/certificates/anthropic-model-context-protocol.pdf", image: "/certificates/anthropic-model-context-protocol.png" },
     { title: "VibeHack 2025 Certificate of Excellence", issuer: "Hack With India x Lovable", href: "/certificates/vibe-hack-2025.png", image: "/certificates/vibe-hack-2025.png" },
-    { title: "Hackathon Winner Certificate", issuer: "Certificate shared by Utkarsh Pandey", href: "/certificates/hackathon-winner.pdf" },
+    { title: "12-hour intercollege hackathon - 6th position across Pune colleges", issuer: "Certificate shared by Utkarsh Pandey", href: "/certificates/hackathon-winner.pdf" },
   ],
   socials: [
     { label: "GitHub", url: "https://github.com/JustXutkarsh" },
