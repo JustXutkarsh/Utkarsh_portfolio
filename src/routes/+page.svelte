@@ -759,9 +759,10 @@
 
   .certPreview {
     aspect-ratio: 16 / 10;
+    background: color-mix(in srgb, var(--color-card), white 18%);
     border-radius: 10px;
     height: auto;
-    object-fit: cover;
+    object-fit: contain;
     position: static;
     width: 100%;
   }
