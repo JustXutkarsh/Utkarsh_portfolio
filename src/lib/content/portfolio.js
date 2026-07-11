@@ -129,11 +129,11 @@ export const portfolioContent = {
     },
   ],
   certifications: [
-    { title: "Supervised Machine Learning: Regression and Classification", issuer: "DeepLearning.AI, Stanford University, Coursera", href: "/certificates/coursera-supervised-ml.pdf" },
+    { title: "Supervised Machine Learning: Regression and Classification", issuer: "DeepLearning.AI, Stanford University, Coursera", href: "/certificates/coursera-supervised-ml.pdf", image: "/certificates/coursera-supervised-ml.png" },
     { title: "Using OpenAI APIs: Exploring APIs with the OpenAI Playground", issuer: "Skillsoft", href: "/certificates/skillsoft-openai-playground.png", image: "/certificates/skillsoft-openai-playground.png" },
     { title: "Introduction to Model Context Protocol", issuer: "Anthropic Education", href: "/certificates/anthropic-model-context-protocol.pdf", image: "/certificates/anthropic-model-context-protocol.png" },
     { title: "VibeHack 2025 Certificate of Excellence", issuer: "Hack With India x Lovable", href: "/certificates/vibe-hack-2025.png", image: "/certificates/vibe-hack-2025.png" },
-    { title: "Hackathon Winner Certificate", issuer: "Certificate shared by Utkarsh Pandey", href: "/certificates/hackathon-winner.pdf" },
+    { title: "Hackathon Winner Certificate", issuer: "Certificate shared by Utkarsh Pandey", href: "/certificates/hackathon-winner.pdf", image: "/certificates/hackathon-winner.png" },
   ],
   socials: [
     { label: "GitHub", url: "https://github.com/JustXutkarsh" },
