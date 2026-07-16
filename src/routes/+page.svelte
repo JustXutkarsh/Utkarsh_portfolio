@@ -737,19 +737,25 @@
     .aboutLine{grid-template-columns:2rem 1fr}.experienceRow{grid-template-columns:2rem 1fr}.experienceRow ul{grid-column:2}.projectFeature{grid-template-columns:1fr}.projectReverse .projectMedia{order:0}.projectTitle{font-size:clamp(2.7rem,13vw,4.2rem)}.achievementPanel{padding-left:1.25rem;padding-right:1.25rem}.achievementIntro h1{font-size:clamp(3.5rem,16vw,5.4rem)}.introRing{opacity:.35;right:-18%;top:18%}.achievementScene{align-content:center;gap:.75rem;grid-template-columns:1fr}.achievementVisual{height:34svh}.achievementProof{font-size:clamp(4.2rem,20vw,6rem);top:52%}.achievementChips{left:2%;top:12%}.achievementChip{font-size:.9rem}.achievementChip+ .achievementChip{margin-left:2rem}.shapeRing{bottom:0;right:2%}.shapeSpark{bottom:2%;left:4%}.achievementCopy{border-left:0;border-top:1px solid #363732;padding-left:0;padding-top:1rem}.achievementIndex span{font-size:1.5rem}.achievementBadge{min-height:2.5rem;margin-top:.5rem}.achievementScene h2{font-size:clamp(2.15rem,10vw,3.4rem);margin:.6rem 0}.achievementDetail{font-size:.9rem;line-height:1.35}.certificateItem{align-items:start;grid-template-columns:2rem 1fr}.certificateMedia{grid-column:2}.certificateCopy h2{font-size:clamp(2rem,10vw,3rem)}
   }
 
-  @media (max-width: 430px) {
-    :global(#welcomeHeader) {
-      padding-top: 14rem;
-    }
+	@media (max-width: 430px) {
+		:global(#welcomeHeader) {
+			padding-top: 14rem;
+		}
 
     .terminalBody {
       max-height: 14rem;
     }
 
-    .achievementIntro h1 {
-      font-size: clamp(3rem, 13vw, 4.4rem);
-    }
-  }
+		.achievementIntro h1 {
+			font-size: clamp(3rem, 13vw, 4.4rem);
+		}
+	}
+
+	@media (max-width: 320px) {
+		:global(#welcomeHeader h1) {
+			font-size: clamp(3rem, 18vw, 3.6rem);
+		}
+	}
 
   @media (min-width: 761px) and (max-width: 1180px) {
     :global(#welcomeHeader) {

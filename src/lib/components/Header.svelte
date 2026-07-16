@@ -58,9 +58,9 @@
   </a>
 
   <nav class="buttons" aria-label="Sections">
-    <a class="headerButton interactable" href="/"><span>Home</span></a>
-    <button class="headerButton interactable" on:click={() => scrollTo("#projectsSection")}><span>Projects</span></button>
-    <button class="headerButton interactable" on:click={() => scrollTo("#achievementsSection")}><span>Achievements</span></button>
+    <a class="headerButton interactable" href="/"><span class="navLabel" data-compact="Home">Home</span></a>
+    <button class="headerButton interactable" on:click={() => scrollTo("#projectsSection")}><span class="navLabel" data-compact="Work">Projects</span></button>
+    <button class="headerButton interactable" on:click={() => scrollTo("#achievementsSection")}><span class="navLabel" data-compact="Wins">Achievements</span></button>
     <button class="commandHint interactable" aria-label="Open command palette" on:click={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}>⌘K</button>
   </nav>
 
@@ -308,6 +308,64 @@
 
     .socialText {
       padding: 0.45rem 0.28rem;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .headerButton .navLabel {
+      font-size: 0;
+    }
+
+    .headerButton .navLabel::after {
+      content: attr(data-compact);
+      font-size: 0.62rem;
+    }
+  }
+
+  @media (max-height: 480px) and (min-width: 561px) {
+    #header {
+      align-items: center;
+      display: flex;
+      gap: 0.4rem;
+      grid-template-columns: none;
+      min-height: 56px;
+      padding: 0.35rem 0.55rem;
+      width: calc(100vw - 1.5rem);
+    }
+
+    #logoHeader {
+      height: 36px;
+      width: 36px;
+    }
+
+    .buttons {
+      flex: 1 1 auto;
+      justify-content: center;
+      overflow: visible;
+      width: auto;
+    }
+
+    .socials {
+      flex: 0 0 auto;
+      grid-column: auto;
+      justify-content: flex-end;
+      overflow: visible;
+      width: auto !important;
+    }
+
+    .socialText span {
+      display: none;
+    }
+
+    .headerButton,
+    .socialText,
+    .commandHint {
+      font-size: 0.62rem;
+      padding: 0.42rem 0.38rem;
+    }
+
+    .socialText {
+      padding-inline: 0.3rem;
     }
   }
 </style>
