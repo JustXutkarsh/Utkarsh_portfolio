@@ -1,23 +1,23 @@
 <script>
   import { onDestroy, onMount, tick } from "svelte";
   import { fetchHomeData, projectImage } from "$lib/logic/data.js";
-  import Card from "$lib/components/Card.svelte";
-  import Button from "$lib/components/Button.svelte";
+  import KineticStory from "$lib/components/KineticStory.svelte";
   import PageHeader from "$lib/components/PageHeader.svelte";
   import gsap from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
 
   let content;
   let projects = [];
-  let metrics = [];
   let terminalRows = [];
   let terminalLiveText = "";
   let terminalReady = false;
   let terminalInput = "";
   let terminalInputEl;
   let cleanup = [];
+  let motionContext;
 
   const MAX_CATEGORIES = 2;
+  const words = (text) => text.split(" ");
   const terminalLines = [
     "$ training catboost_model.pkl... ROC-AUC: 0.819",
     "$ agent_pipeline: 7/7 agents online",
@@ -34,21 +34,24 @@
   const aboutText = (about) => Array.isArray(about)
     ? about.map((item) => typeof item === "string" ? item : item.children?.map((child) => child.text).join("")).filter(Boolean)
     : [];
-  const getMetrics = (achievements = []) => achievements.flatMap((item) => (item.metrics || []).map((metric) => ({ ...metric, source: item.title })));
-  const sortAchievements = (achievements = []) => [...achievements].sort((a, b) => {
+  const sortAchievements = (achievements = []) => {
+    const hasFlipkart = achievements.some((item) => item.title?.toLowerCase().includes("flipkart grid"));
+    return achievements.filter((item) => !(hasFlipkart && item.title?.toLowerCase().includes("hackerearth traffic prediction"))).sort((a, b) => {
     const aTime = Date.parse(`1 ${a.milestoneDate || ""}`) || 0;
     const bTime = Date.parse(`1 ${b.milestoneDate || ""}`) || 0;
     return bTime - aTime;
-  });
-  const formatMonthYear = (isoString) => new Date(isoString).toLocaleString(undefined, { month: "short", year: "numeric" });
-  const formatMetric = (value, precision = 0, suffix = "") => {
-    const number = Number(value || 0);
-    const formatted = number.toLocaleString("en-US", {
-      minimumFractionDigits: precision,
-      maximumFractionDigits: precision,
     });
-    return `${formatted}${suffix || ""}`;
   };
+  const achievementProof = (achievement) => {
+    const title = achievement.title?.toLowerCase() || "";
+    if (title.includes("flipkart")) return "35,000+";
+    if (title.includes("mariadb")) return "TOP 70";
+    if (title.includes("vibehack")) return "#2 / 600+";
+    if (title.includes("intercollege")) return "#6 / 200+";
+    if (title.includes("smart india")) return "STAGE 2";
+    return "RECOGNIZED";
+  };
+  const formatMonthYear = (isoString) => new Date(isoString).toLocaleString(undefined, { month: "short", year: "numeric" });
 
   function startTerminal(reducedMotion) {
     if (reducedMotion) {
@@ -113,70 +116,107 @@
 
   function setupMotion(reducedMotion) {
     gsap.registerPlugin(ScrollTrigger);
-    gsap.from(".heroReveal", {
-      autoAlpha: 0,
-      y: reducedMotion ? 0 : 18,
-      duration: reducedMotion ? 0.01 : 0.5,
-      stagger: reducedMotion ? 0 : 0.08,
-      ease: "power2.out",
-    });
+    if (reducedMotion) return;
 
-    gsap.utils.toArray(".revealSection").forEach((section) => {
-      gsap.from(section, {
-        autoAlpha: 0,
-        y: reducedMotion ? 0 : 24,
-        duration: reducedMotion ? 0.01 : 0.5,
-        ease: "power2.out",
-        scrollTrigger: { trigger: section, start: "top 82%", once: true },
+    motionContext = gsap.context(() => {
+      const hero = gsap.timeline({ defaults: { ease: "power4.out" } });
+      hero
+        .from(".heroWord", { yPercent: 115, rotate: 4, duration: 1.15, stagger: 0.09 })
+        .from(".heroKicker", { autoAlpha: 0, y: 18, duration: 0.55 }, 0.2)
+        .from(".heroSupport", { autoAlpha: 0, y: 34, duration: 0.8 }, 0.48)
+        .from(".heroText, .heroMeta", { autoAlpha: 0, y: 22, duration: 0.65, stagger: 0.08 }, 0.62)
+        .from(".terminalWindow", { autoAlpha: 0, y: 42, scale: 0.97, duration: 0.85 }, 0.72)
+        .from(".heroShape", { autoAlpha: 0, scale: 0, rotate: -90, duration: 0.8, stagger: 0.12 }, 0.35);
+
+      gsap.to(".heroWordMask:first-child .heroWord", {
+        xPercent: -12,
+        scrollTrigger: { trigger: "#welcomeHeader", start: "top top", end: "bottom top", scrub: 0.7 },
       });
-    });
+      gsap.to(".heroWordMask:last-child .heroWord", {
+        xPercent: 12,
+        scrollTrigger: { trigger: "#welcomeHeader", start: "top top", end: "bottom top", scrub: 0.7 },
+      });
 
-    gsap.utils.toArray(".statNumber").forEach((node) => {
-      const target = Number(node.dataset.value || 0);
-      const precision = Number(node.dataset.precision || 0);
-      const suffix = node.dataset.suffix || "";
-      ScrollTrigger.create({
-        trigger: node,
-        start: "top 85%",
-        once: true,
-        onEnter: () => {
-          const state = { value: 0 };
-          gsap.to(state, {
-            value: target,
-            duration: reducedMotion ? 0.01 : 1.1,
-            ease: "power2.out",
-            onUpdate: () => node.textContent = formatMetric(state.value, precision, suffix),
-            onComplete: () => node.textContent = formatMetric(target, precision, suffix),
+      gsap.utils.toArray(".revealSection").forEach((section) => {
+        const titleWords = section.querySelectorAll(".sectionWord");
+        const revealItems = section.querySelectorAll(".experienceRow, .projectFeature, .certificateItem, .aboutLine");
+        if (titleWords.length) {
+          gsap.from(titleWords, {
+            yPercent: 120,
+            rotate: 5,
+            duration: 0.9,
+            stagger: 0.055,
+            ease: "power4.out",
+            scrollTrigger: { trigger: section, start: "top 82%", once: true },
           });
-        },
+        }
+        if (revealItems.length) {
+          gsap.from(revealItems, {
+            autoAlpha: 0,
+            y: 54,
+            scale: 0.975,
+            duration: 0.75,
+            stagger: 0.075,
+            ease: "power3.out",
+            scrollTrigger: { trigger: revealItems[0], start: "top 88%", once: true },
+          });
+        }
       });
+
+      gsap.utils.toArray(".projectFeature #mainImage").forEach((image) => {
+        gsap.from(image, {
+          clipPath: "inset(12% 0 12% 0)",
+          scale: 1.12,
+          duration: 1.05,
+          ease: "power3.out",
+          scrollTrigger: { trigger: image, start: "top 88%", once: true },
+        });
+      });
+
+      gsap.utils.toArray(".experienceRow").forEach((row, index) => {
+        gsap.from(row, { xPercent: index % 2 ? 8 : -8, scrollTrigger: { trigger: row, start: "top bottom", end: "top 55%", scrub: 0.7 } });
+      });
+
+      const achievementSection = document.querySelector("#achievementsSection");
+      const achievementRail = document.querySelector(".achievementRail");
+      if (achievementSection && achievementRail) {
+        const distance = () => Math.max(0, achievementRail.scrollWidth - window.innerWidth);
+        const railTween = gsap.to(achievementRail, {
+          x: () => -distance(),
+          ease: "none",
+          scrollTrigger: {
+            trigger: achievementSection,
+            start: "top top",
+            end: () => `+=${distance()}`,
+            pin: true,
+            scrub: 0.8,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+          },
+        });
+        gsap.utils.toArray(".achievementScene").forEach((scene) => {
+          gsap.from(scene.querySelector(".achievementProof"), {
+            xPercent: 10,
+            rotate: -2,
+            scrollTrigger: { trigger: scene, containerAnimation: railTween, start: "left right", end: "center center", scrub: 0.7 },
+          });
+          gsap.from(scene.querySelectorAll(".achievementChip, .achievementShape, .achievementBadge"), {
+            autoAlpha: 0,
+            scale: 0.45,
+            rotate: 18,
+            stagger: 0.1,
+            scrollTrigger: { trigger: scene, containerAnimation: railTween, start: "left 85%", end: "center 55%", scrub: 0.7 },
+          });
+        });
+      }
     });
+    cleanup.push(() => motionContext?.revert());
 
     ScrollTrigger.refresh();
   }
 
-  function setupProjectTilt(reducedMotion) {
-    if (reducedMotion) return;
-    gsap.utils.toArray(".projectCard").forEach((card) => {
-      const move = (event) => {
-        const rect = card.getBoundingClientRect();
-        const x = (event.clientX - rect.left) / rect.width - 0.5;
-        const y = (event.clientY - rect.top) / rect.height - 0.5;
-        gsap.to(card, { rotateY: x * 12, rotateX: y * -12, transformPerspective: 900, duration: 0.25, ease: "power2.out" });
-      };
-      const leave = () => gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.35, ease: "power2.out" });
-      card.addEventListener("mousemove", move);
-      card.addEventListener("mouseleave", leave);
-      cleanup.push(() => {
-        card.removeEventListener("mousemove", move);
-        card.removeEventListener("mouseleave", leave);
-      });
-    });
-  }
-
   onMount(async () => {
     content = await fetchHomeData();
-    metrics = getMetrics(content.achievements);
     projects = [...(content.projects || [])].sort((a, b) => {
       if ((b.featured === true) !== (a.featured === true)) return (b.featured === true) - (a.featured === true);
       return new Date(b.created) - new Date(a.created);
@@ -185,7 +225,6 @@
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     startTerminal(reducedMotion);
     setupMotion(reducedMotion);
-    setupProjectTilt(reducedMotion);
   });
 
   onDestroy(() => cleanup.forEach((fn) => fn()));
@@ -199,14 +238,20 @@
   <div id="content">
     <PageHeader id="welcomeHeader">
       <div class="headerContent">
-        <p class="brand">{content.hero.brand}</p>
-        <h1 class="emphasis heroReveal">{content.hero.name}</h1>
-        <h2 class="emphasis heroReveal">{content.hero.title}</h2>
-        <p class="heroText heroReveal">{content.hero.subtitle}</p>
-        <div class="heroMeta heroReveal">
+        <p class="brand heroKicker">{content.hero.brand} · AI ENGINEER</p>
+        <h1 class="kineticName" aria-label={content.hero.name}>
+          {#each words(content.hero.name) as word}
+            <span class="heroWordMask"><span class="heroWord">{word}</span></span>
+          {/each}
+        </h1>
+        <span class="heroShape heroShapeOne" aria-hidden="true"></span>
+        <span class="heroShape heroShapeTwo" aria-hidden="true"></span>
+        <h2 class="heroSupport">{content.hero.title}</h2>
+        <p class="heroText">{content.hero.subtitle}</p>
+        <div class="heroMeta">
           <span>{content.hero.location}</span>
         </div>
-        <div class="terminalWindow heroReveal" aria-label="AI engineering terminal signature">
+        <div class="terminalWindow" aria-label="AI engineering terminal signature">
           <div class="terminalChrome"><span></span><span></span><span></span></div>
           <div class="terminalBody" role="button" tabindex="0" on:click={() => terminalInputEl?.focus({ preventScroll: true })} on:keydown={(event) => {
             if (event.key === "Enter" || event.key === " ") terminalInputEl?.focus({ preventScroll: true });
@@ -233,150 +278,120 @@
       </div>
     </PageHeader>
 
-    <section id="statsSection" class="revealSection">
-      <div class="statsGrid">
-        {#each metrics as metric}
-          <Card className="textCard statCard noBounce instantShow">
-            <p class="metricLabel">{metric.label}</p>
-            <p class="statNumber" data-value={metric.value} data-precision={metric.precision || 0} data-suffix={metric.suffix || ""}>
-              {formatMetric(0, metric.precision || 0, metric.suffix)}
-            </p>
-          </Card>
+    <KineticStory skills={skillsAsEntries(content.skills).flatMap(([, items]) => items)} />
+
+    <section id="aboutSection" class="revealSection editorialBand creamBand">
+      <h1 class="sectionTitle" aria-label="AI systems, end to end">{#each words("AI systems, end to end") as word}<span class="sectionWordMask"><span class="sectionWord">{word}</span></span>{/each}</h1>
+      <div id="aboutLayout">
+        {#each aboutText(content.about) as paragraph, index}
+          <p class:leadAbout={index === 0} class="aboutLine"><span>0{index + 1}</span>{paragraph}</p>
         {/each}
       </div>
     </section>
 
-    <section id="aboutSection" class="revealSection">
-      <h1 class="sectionTitle">- AI systems, end to end -</h1>
-      <Card hasSlug={false} className="aboutCard noBounce instantShow">
-        <div id="aboutLayout">
-          {#each aboutText(content.about) as paragraph}
-            <p>{paragraph}</p>
-          {/each}
-        </div>
-      </Card>
-    </section>
-
-    <section id="experienceSection" class="revealSection">
-      <h1 class="sectionTitle">- Engineering experience -</h1>
-      <div class="sectionGrid">
-        {#each content.experience as item}
-          <Card className="textCard noBounce instantShow">
-            <p class="eyebrow">{item.period}</p>
-            <h2>{item.role}</h2>
-            <h3>{item.company}</h3>
+    <section id="experienceSection" class="revealSection editorialBand darkBand">
+      <h1 class="sectionTitle" aria-label="Engineering experience">{#each words("Engineering experience") as word}<span class="sectionWordMask"><span class="sectionWord">{word}</span></span>{/each}</h1>
+      <div class="experienceList">
+        {#each content.experience as item, index}
+          <article class="experienceRow">
+            <span class="rowNumber">0{index + 1}</span>
+            <div class="experienceHeading"><p>{item.period}</p><h2>{item.role}</h2><h3>{item.company}</h3></div>
             <ul>
               {#each item.points || [] as point}
                 <li>{point}</li>
               {/each}
             </ul>
-          </Card>
+          </article>
         {/each}
       </div>
     </section>
 
-    <section id="projectsSection" class="revealSection">
-      <h1 class="sectionTitle">- Featured AI projects -</h1>
-      <div class="flexCards">
-        {#each projects.filter((post) => post.homepage) as post}
-          <Card id={post.slug.current} className="projectCard noBounce instantShow">
-            <div class="imageArea" role="button" tabindex="0">
+    <section id="projectsSection" class="revealSection editorialBand creamBand">
+      <h1 class="sectionTitle" aria-label="Featured AI projects">{#each words("Featured AI projects") as word}<span class="sectionWordMask"><span class="sectionWord">{word}</span></span>{/each}</h1>
+      <div class="projectShowcase">
+        {#each projects.filter((post) => post.homepage) as post, index}
+          <article id={post.slug.current} class:projectReverse={index % 2 === 1} class="projectFeature">
+            <div class="projectMedia">
               <img id="mainImage" loading="lazy" fetchpriority="low" src={projectImage(post)} alt={post.mainImage?.alt || post.title} />
-              <div class="info">
-                <div class="infoContent">
-                  <div>
-                    <p id="date">{formatMonthYear(post.created)}</p>
-                    <div id="postCategories">
-                      {#if post.featured}<div><p id="featured">Featured</p></div>{/if}
-                      {#each getCategories(post).visible as category}<div><p>{category.title}</p></div>{/each}
-                      {#if getCategories(post).hiddenCount > 0}<div><p>+{getCategories(post).hiddenCount}</p></div>{/if}
-                    </div>
-                    <h1 class="projectTitle">{post.title}</h1>
-                    <p class="summary">{post.summary}</p>
-                  </div>
-                  <Button id="readmore" slug={post.slug.current} text="Read More" />
-                </div>
+            </div>
+            <div class="projectCopy">
+              <div class="projectMeta"><span>0{index + 1}</span><time>{formatMonthYear(post.created)}</time></div>
+              <div id="postCategories">
+                {#if post.featured}<p id="featured">Featured</p>{/if}
+                {#each getCategories(post).visible as category}<p>{category.title}</p>{/each}
+                {#if getCategories(post).hiddenCount > 0}<p>+{getCategories(post).hiddenCount}</p>{/if}
               </div>
-            </div>
-          </Card>
-        {/each}
-      </div>
-    </section>
-
-    <section id="skillsSection" class="revealSection">
-      <h1 class="sectionTitle">- AI capability stack -</h1>
-      <div class="sectionGrid">
-        {#each skillsAsEntries(content.skills) as [group, skills]}
-          <Card className="textCard skillCard noBounce instantShow">
-            <h2>{group}</h2>
-            <div class="skillList">
-              {#each skills as skill}
-                <span>{skill}</span>
-              {/each}
-            </div>
-          </Card>
-        {/each}
-      </div>
-    </section>
-
-    <section id="achievementsSection" class="revealSection">
-      <h1 class="sectionTitle">- Achievement timeline -</h1>
-      <div class="achievementTimeline">
-          {#each sortAchievements(content.achievements) as achievement}
-            <article class="achievementItem">
-            <span class="achievementMarker"></span>
-            <div class="achievementContent">
-            <div class="achievementBadge">
-              {#if achievement.logoPath}
-                <img class="achievementLogo" src={achievement.logoPath} alt={`${achievement.logo} logo`} loading="lazy" />
-              {:else if achievement.logo}
-                <span class={`brandLogo ${achievement.logo.toLowerCase()}`}>{achievement.logo}</span>
-              {:else if achievement.icon}
-                <span class="trophy">{achievement.icon}</span>
-              {/if}
-            </div>
-            {#if achievement.milestoneDate}
-              <p class="metricLabel">{achievement.milestoneDate}</p>
-            {/if}
-            <h2>{achievement.title || achievement}</h2>
-            {#if achievement.detail}
-              <p>{achievement.detail}</p>
-            {/if}
-            {#if achievement.href}
-              <a class="certLink" href={achievement.href} target="_blank" rel="noopener noreferrer">{achievement.hrefLabel || "View Details"}</a>
-            {/if}
+              <h2 class="projectTitle">{post.title}</h2>
+              <p class="summary">{post.summary}</p>
+              <a class="projectLink" href={`/projects/${post.slug.current}`}>Explore project <span>↗</span></a>
             </div>
           </article>
-          {/each}
+        {/each}
       </div>
     </section>
 
-    <section id="certificationsSection" class="revealSection">
-      <h1 class="sectionTitle">- Certifications -</h1>
-      <div class="sectionGrid">
-        {#each content.certifications || [] as certificate}
-          <Card className="textCard certCard noBounce instantShow">
-            {#if certificate.image}
-              <a href={certificate.href} target="_blank" rel="noopener noreferrer">
-                <img class="certPreview" src={certificate.image} alt={certificate.title} loading="lazy" />
-              </a>
-            {/if}
-            <h2>{certificate.title}</h2>
-            <p>{certificate.issuer}</p>
-            <a class="certLink" href={certificate.href} target="_blank" rel="noopener noreferrer">View Certificate</a>
-          </Card>
+    <section id="achievementsSection" class="horizontalAchievements darkBand" aria-label="Achievement timeline">
+      <div class="achievementRail">
+        <header class="achievementPanel achievementIntro">
+          <p class="sceneLabel">VERTICAL SCROLL · HORIZONTAL PROOF</p>
+          <h1>BUILT.<br /><span>TESTED.</span><br />RECOGNIZED.</h1>
+          <span class="scrollCue">SCROLL TO EXPLORE →</span>
+          <i class="introRing" aria-hidden="true"></i><i class="introSpark" aria-hidden="true"></i>
+        </header>
+        {#each sortAchievements(content.achievements) as achievement, index}
+          <article class={`achievementPanel achievementScene achievementScene${index % 3}`}>
+            <div class="achievementVisual" aria-hidden="true">
+              <strong class="achievementProof" class:proofLong={achievementProof(achievement).length > 7}>{achievementProof(achievement)}</strong>
+              <div class="achievementChips">
+                <span class="achievementChip">{achievement.milestoneDate}</span>
+                <span class="achievementChip">{String(index + 1).padStart(2, "0")} / {String(sortAchievements(content.achievements).length).padStart(2, "0")}</span>
+              </div>
+              <i class="achievementShape shapeRing"></i><i class="achievementShape shapeSpark"></i>
+            </div>
+            <div class="achievementCopy">
+              <div class="achievementIndex"><span>0{index + 1}</span><p>{achievement.milestoneDate}</p></div>
+              <div class="achievementBadge">
+                {#if achievement.logoPath}
+                  <img class="achievementLogo" src={achievement.logoPath} alt={`${achievement.logo} logo`} loading="lazy" />
+                {:else if achievement.logo}
+                  <span class={`brandLogo ${achievement.logo.toLowerCase()}`}>{achievement.logo}</span>
+                {:else if achievement.icon}
+                  <span class="trophy">{achievement.icon}</span>
+                {/if}
+              </div>
+              <h2>{achievement.milestoneTitle || achievement.title || achievement}</h2>
+              {#if achievement.detail}<p class="achievementDetail">{achievement.detail}</p>{/if}
+              {#if achievement.href}
+                <a class="recordLink" href={achievement.href} target="_blank" rel="noopener noreferrer">{achievement.hrefLabel || "Open record"} ↗</a>
+              {/if}
+            </div>
+          </article>
         {/each}
-        </div>
+      </div>
+    </section>
+
+    <section id="certificationsSection" class="revealSection editorialBand creamBand">
+      <h1 class="sectionTitle" aria-label="Certifications">{#each words("Certifications") as word}<span class="sectionWordMask"><span class="sectionWord">{word}</span></span>{/each}</h1>
+      <div class="certificateList">
+        {#each content.certifications || [] as certificate, index}
+          <article class="certificateItem">
+            <span class="rowNumber">0{index + 1}</span>
+            <div class="certificateCopy"><h2>{certificate.title}</h2><p>{certificate.issuer}</p><a href={certificate.href} target="_blank" rel="noopener noreferrer">View certificate ↗</a></div>
+            {#if certificate.image}<a class="certificateMedia" href={certificate.href} target="_blank" rel="noopener noreferrer"><img class="certPreview" src={certificate.image} alt={certificate.title} loading="lazy" /></a>{/if}
+          </article>
+        {/each}
+      </div>
     </section>
   </div>
 {/if}
 
 <style>
   :global(#welcomeHeader) {
+    background: #080807;
     box-sizing: border-box;
     height: auto;
     min-height: 100svh;
-    padding: clamp(7rem, 12vh, 9rem) 0 clamp(3rem, 7vh, 5rem);
+    padding: clamp(7rem, 12vh, 9rem) 0 clamp(4rem, 8vh, 6rem);
   }
 
   :global(#welcomeHeader .headerContent) {
@@ -385,51 +400,119 @@
   }
 
   .brand {
-    color: var(--color-secondary);
-    font-size: 1rem;
-    font-weight: 900;
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: clamp(0.72rem, 1.2vw, 0.9rem);
+    font-weight: 700;
     letter-spacing: 0;
-    margin: 0 0 0.6rem;
-    text-align: center;
+    margin: 0 0 1.2rem;
+    text-align: left;
+    text-transform: uppercase;
   }
 
   :global(#welcomeHeader h1) {
-    font-size: clamp(4rem, 9vw, 8.5rem);
-    line-height: 0.95;
+    color: #f5f1df;
+    font-family: "Rubik", sans-serif;
+    font-size: clamp(5rem, 13.5vw, 12.5rem);
+    font-weight: 700;
+    line-height: 0.76;
     margin: 0;
-    text-align: left;
+    text-transform: uppercase;
   }
 
-  :global(#welcomeHeader h2) {
-    display: inline-block;
-    font-size: clamp(1.35rem, 3vw, 2.75rem);
-    line-height: 1.12;
-    margin: clamp(1.4rem, 4vh, 2.4rem) 0 0;
-    max-width: min(100%, 980px);
+  .kineticName {
+    display: grid;
+    gap: 0.18em;
+    position: relative;
+    z-index: 1;
+  }
+
+  .heroWordMask,
+  .sectionWordMask {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.08em;
+  }
+
+  .heroWord {
+    display: block;
+    transform-origin: left bottom;
+    white-space: nowrap;
+  }
+
+  .heroWordMask:last-child .heroWord {
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .heroSupport {
+    background: transparent !important;
+    color: #f5f1df;
+    display: block;
+    font-family: "Rubik", sans-serif !important;
+    font-size: clamp(1.3rem, 3vw, 2.6rem) !important;
+    font-weight: 500;
+    line-height: 1.08 !important;
+    margin: clamp(2rem, 5vh, 3.5rem) 0 0 !important;
+    max-width: 780px;
+    padding: 0 !important;
+    text-align: left !important;
+  }
+
+  .heroShape {
+    display: block;
+    pointer-events: none;
+    position: absolute;
+    z-index: 2;
+  }
+
+  .heroShapeOne {
+    background: transparent;
+    border: clamp(0.45rem, 1vw, 0.9rem) solid var(--color-accent);
+    border-radius: 50%;
+    box-sizing: border-box;
+    height: clamp(2.5rem, 6vw, 5.5rem);
+    right: 7%;
+    top: 31%;
+    width: clamp(2.5rem, 6vw, 5.5rem);
+  }
+
+  .heroShapeTwo {
+    background: #ff7f67;
+    height: clamp(1rem, 2.6vw, 2.3rem);
+    left: 45%;
+    rotate: 45deg;
+    top: 18%;
+    width: clamp(1rem, 2.6vw, 2.3rem);
   }
 
   .heroText,
   .heroMeta {
+    color: #f5f1df;
     margin: 1rem auto 0;
     max-width: 880px;
     text-align: center;
   }
 
   .heroText {
-    color: var(--color-text);
+    color: #c9c7bb;
     font-size: clamp(1rem, 2vw, 1.35rem);
     line-height: 1.6;
+    margin-left: 0;
+    max-width: 760px;
+    text-align: left;
   }
 
   .heroMeta {
+    justify-content: flex-start;
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
-    justify-content: center;
+    margin-left: 0;
+    text-align: left;
   }
 
-  .heroMeta span,
-  .skillList span {
+  .heroMeta span {
     background: var(--color-card);
     border: 1px solid var(--color-card-outline);
     border-radius: 999px;
@@ -437,12 +520,12 @@
   }
 
   .terminalWindow {
-    background: color-mix(in srgb, var(--color-background), black 18%);
+    background: #0e0e0c;
     border: 1px solid color-mix(in srgb, var(--color-accent), transparent 55%);
     border-radius: 18px;
     box-shadow: 0 0 34px color-mix(in srgb, var(--color-accent), transparent 84%);
-    margin: clamp(1.5rem, 5vh, 3rem) auto 0;
-    max-width: 760px;
+    margin: clamp(2rem, 6vh, 4rem) 0 0 auto;
+    max-width: 820px;
     overflow: hidden;
     text-align: left;
   }
@@ -467,7 +550,7 @@
     background: transparent;
     border: 0;
     box-shadow: none;
-    color: var(--color-text);
+    color: #f5f1df;
     display: block;
     font-family: var(--font-mono);
     font-size: clamp(0.78rem, 2vw, 1rem);
@@ -489,7 +572,7 @@
   }
 
   .terminalBody span {
-    color: var(--alt-text);
+    color: #a9aaa0;
   }
 
   .terminalPrompt {
@@ -518,222 +601,64 @@
     color: var(--color-accent);
   }
 
-  .statsGrid {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    margin: auto;
-    width: min(1100px, 92%);
-  }
-
-  :global(.statCard) {
-    padding: 1.1rem;
-  }
-
-  .metricLabel {
-    color: var(--alt-text);
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    letter-spacing: 0;
-    margin: 0;
-    text-transform: uppercase;
-  }
-
-  .statNumber {
-    color: var(--color-accent);
-    font-family: var(--font-mono);
-    font-size: clamp(1.75rem, 4vw, 2.8rem);
-    font-weight: 800;
-    line-height: 1;
-    margin: 0.75rem 0 0;
-  }
-
-  #aboutLayout,
-  :global(.textCard) {
-    font-size: 1.05rem;
-    line-height: 1.7;
-  }
-
-  :global(.textCard) {
-    aspect-ratio: unset;
-    min-height: 0;
-  }
-
-  :global(.textCard h2),
-  :global(.textCard h3) {
-    margin: 0.2rem 0;
-  }
-
-  .eyebrow {
-    color: var(--color-primary);
-    font-weight: 900;
-    margin: 0;
-  }
-
-  .sectionGrid {
-    display: grid;
-    gap: 1.4rem;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
-    margin: auto;
-    width: min(1100px, 92%);
-  }
+  .editorialBand{box-sizing:border-box;padding-bottom:clamp(5rem,10vw,10rem);position:relative}.creamBand{background:#f5f1df;color:#0a0b0a}.darkBand{background:#0a0b0a;color:#f5f1df}
 
   .sectionTitle {
-    font-family: "Althite";
-    font-size: 2rem;
+    color: inherit;
+    display: flex;
+    flex-wrap: wrap;
+    font-family: "Rubik", sans-serif;
+    font-size: clamp(2.8rem, 8vw, 7.5rem);
+    font-weight: 700;
+    gap: 0 0.22em;
+    justify-content: flex-start;
+    line-height: 0.88;
     margin: auto;
-    padding: 20px;
-    text-align: center;
+    padding: clamp(4rem, 10vw, 8rem) 0 clamp(2rem, 5vw, 4rem);
+    text-align: left;
+    text-transform: uppercase;
+    width: min(1120px, 92%);
     white-space: normal;
   }
 
-  .imageArea {
-    container-type: inline-size;
-    aspect-ratio: 16 / 11;
-    display: grid;
-    gap: 0.85rem;
-    height: auto;
-    width: 100%;
+  .sectionWord {
+    display: block;
+    transform-origin: left bottom;
   }
 
-  :global(.projectCard) {
-    aspect-ratio: unset;
-    box-sizing: border-box;
-    min-height: 0;
-    outline-color: color-mix(in srgb, var(--color-card-outline), var(--color-accent) 18%);
-    padding: 0.75rem;
-    transform-style: preserve-3d;
-    transition: box-shadow 180ms ease, outline-color 180ms ease;
-    will-change: transform;
-    width: min(100%, 34rem);
+  #aboutLayout{display:grid;gap:0;margin:auto;width:min(1120px,92%)}.aboutLine{border-top:1px solid #0a0b0a;display:grid;font-size:clamp(1.1rem,2.2vw,1.6rem);grid-template-columns:3rem 1fr;line-height:1.5;margin:0;padding:clamp(1.5rem,3vw,2.7rem) 0}.aboutLine span,.rowNumber{font-family:var(--font-mono);font-size:.7rem}.leadAbout{font-family:"Rubik",sans-serif;font-size:clamp(1.8rem,4vw,3.8rem);font-weight:500;line-height:1.08}
+  .experienceList{margin:auto;width:min(1120px,92%)}.experienceRow{border-top:1px solid #4a4b46;display:grid;gap:clamp(1rem,3vw,3rem);grid-template-columns:3rem minmax(240px,.85fr) 1.15fr;padding:clamp(2rem,5vw,4.5rem) 0}.experienceHeading p{color:#90ead6;font-family:var(--font-mono);font-size:.72rem;margin:0}.experienceHeading h2{font-family:"Rubik",sans-serif;font-size:clamp(2rem,4.5vw,4.2rem);line-height:.95;margin:.5rem 0}.experienceHeading h3{color:#ff9bea;font-size:clamp(1rem,1.8vw,1.35rem);margin:0}.experienceRow ul{font-size:clamp(.95rem,1.5vw,1.15rem);line-height:1.55;margin:0;padding-left:1.2rem}.darkBand .rowNumber{color:#90ead6}
+  .projectShowcase{display:grid;gap:clamp(6rem,12vw,12rem);margin:auto;width:min(1180px,92%)}.projectFeature{align-items:center;display:grid;gap:clamp(2rem,5vw,5rem);grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr)}.projectReverse .projectMedia{order:2}.projectMedia{overflow:hidden}.projectMedia img{aspect-ratio:16/11;border-radius:0;height:auto;object-fit:cover;position:static;width:100%}.projectMeta{align-items:center;border-bottom:1px solid #0a0b0a;display:flex;font-family:var(--font-mono);font-size:.7rem;justify-content:space-between;padding-bottom:.8rem}.projectTitle{color:#0a0b0a;font-family:"Rubik",sans-serif;font-size:clamp(2.8rem,6vw,6rem);line-height:.86;margin:1.2rem 0;text-transform:uppercase}.summary{font-size:clamp(1rem,1.6vw,1.2rem);line-height:1.5;margin:0 0 2rem}.projectLink,.recordLink,.certificateCopy a{border-bottom:2px solid currentColor;color:inherit;display:inline-flex;font-family:var(--font-mono);font-size:.78rem;gap:1rem;padding:.5rem 0;text-transform:uppercase}.projectLink span{color:#ff6f59}.projectCopy #postCategories{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:1rem;width:auto}.projectCopy #postCategories p{background:#0a0b0a;color:#f5f1df;font-family:var(--font-mono);font-size:.65rem;margin:0;padding:.4rem .55rem;text-transform:uppercase}.projectCopy #postCategories #featured{background:#ff8068!important;color:#0a0b0a}
+  .horizontalAchievements{height:100svh;overflow:hidden;position:relative}.achievementRail{display:flex;height:100%;width:max-content}.achievementPanel{box-sizing:border-box;min-width:100vw;padding:clamp(6rem,9vw,9rem) max(4vw,calc((100vw - 1120px)/2));position:relative}.achievementIntro{display:flex;flex-direction:column;justify-content:center;overflow:hidden}.achievementIntro h1{color:#f5f1df;font-family:"Rubik",sans-serif;font-size:clamp(4.5rem,10vw,9rem);line-height:.76;margin:2rem 0;text-transform:uppercase}.achievementIntro h1 span{color:#ff8068}.sceneLabel,.scrollCue{color:#90ead6;font-family:var(--font-mono);font-size:.72rem;position:relative;z-index:2}.scrollCue{margin-top:2rem}.introRing{border:clamp(1rem,2vw,2rem) solid #90ead6;border-radius:50%;height:clamp(9rem,19vw,18rem);position:absolute;right:10vw;top:18%;transform:rotate(-18deg);width:clamp(9rem,19vw,18rem)}.introSpark,.shapeSpark{height:5rem;position:absolute;width:5rem}.introSpark{bottom:13%;right:29%}.introSpark::before,.introSpark::after,.shapeSpark::before,.shapeSpark::after{background:#ff9bea;content:"";left:50%;position:absolute;top:50%;transform:translate(-50%,-50%)}.introSpark::before,.shapeSpark::before{height:100%;width:18%}.introSpark::after,.shapeSpark::after{height:18%;width:100%}
+  .achievementScene{align-items:center;display:grid;gap:clamp(2rem,6vw,7rem);grid-template-columns:minmax(0,1.08fr) minmax(320px,.92fr)}.achievementVisual{height:min(66vh,620px);overflow:hidden;position:relative}.achievementProof{color:#90ead6;font-family:"Rubik",sans-serif;font-size:clamp(5rem,13vw,12rem);left:0;line-height:.8;position:absolute;top:42%;transform:translateY(-50%);white-space:nowrap}.achievementChips{display:flex;flex-direction:column;left:8%;position:absolute;top:14%;transform:rotate(-3deg)}.achievementChip{background:#ff9bea;box-shadow:.55rem .55rem 0 #171714;color:#080807;font-family:"Rubik",sans-serif;font-size:clamp(1rem,2.1vw,2rem);font-weight:600;padding:.55rem 1rem;width:max-content}.achievementChip+ .achievementChip{background:#ff8068;margin-left:4rem;margin-top:-.15rem;transform:rotate(5deg)}.achievementShape{display:block;position:absolute}.shapeRing{border:clamp(.8rem,1.5vw,1.35rem) solid #f5f1df;border-radius:50%;bottom:7%;height:clamp(6rem,12vw,11rem);right:7%;width:clamp(6rem,12vw,11rem)}.shapeSpark{bottom:5%;left:13%;transform:rotate(14deg)}.achievementScene1 .achievementProof{color:#ff9bea}.achievementScene1 .achievementChip{background:#90ead6}.achievementScene1 .achievementChip+ .achievementChip{background:#ff8068}.achievementScene1 .shapeRing{border-color:#ff8068}.achievementScene2 .achievementProof{color:#ff8068}.achievementScene2 .achievementChip{background:#ff9bea}.achievementScene2 .achievementChip+ .achievementChip{background:#90ead6}.achievementScene2 .shapeRing{border-color:#90ead6}
+  .achievementCopy{border-left:1px solid #363732;padding-left:clamp(1.5rem,4vw,4rem)}.achievementIndex{align-items:center;display:flex;font-family:var(--font-mono);justify-content:space-between}.achievementIndex span{color:#ff8068;font-size:clamp(2rem,4vw,4rem)}.achievementIndex p{color:#90ead6;font-size:.72rem;text-transform:uppercase}.achievementScene h2{color:#f5f1df;font-family:"Rubik",sans-serif;font-size:clamp(2.5rem,5vw,5rem);line-height:.88;margin:clamp(1.5rem,4vh,3rem) 0 1rem;max-width:720px;text-transform:uppercase}.achievementDetail{font-size:clamp(1rem,1.6vw,1.2rem);line-height:1.5;max-width:620px}.achievementBadge{align-items:center;display:flex;min-height:4rem;margin-top:1.5rem}.recordLink{margin-top:1rem}
+
+  .achievementProof {
+    font-size: clamp(4rem, 5.4vw, 7rem);
+    left: auto;
+    right: 0;
+    text-align: right;
   }
 
-  :global(.projectCard:hover) {
-    box-shadow: 0 0 34px color-mix(in srgb, var(--color-accent), transparent 78%);
-    outline-color: var(--color-accent);
+  .achievementProof.proofLong {
+    font-size: clamp(3.5rem, 4.2vw, 6rem);
   }
 
-  #mainImage {
-    aspect-ratio: 16 / 10;
-    border-radius: 14px;
-    height: auto;
-    object-fit: cover;
-    position: static;
-    width: 100%;
-  }
-
-  .info {
-    align-items: stretch;
-    background: transparent;
-    border-radius: 0;
-    height: auto;
-    justify-content: start;
-    opacity: 1 !important;
-    overflow: visible;
-    padding: 0.25rem 0.2rem 0.4rem;
-    position: static;
-    scale: 1;
-    text-align: center;
-    width: auto;
-    z-index: 3;
-  }
-
-  .infoContent {
-    display: flex;
-    flex-direction: column;
-    gap: 0.9rem;
-    height: auto;
-    justify-content: start;
-    scale: 1;
-    width: 100%;
-  }
-
-  .projectTitle {
-    font-size: clamp(1.85rem, 6cqw, 3.3rem);
-    line-height: 1;
-    margin: 0;
-    text-align: left;
-    width: 100%;
-    word-wrap: break-word;
-  }
-
-  .summary {
-    font-size: clamp(0.92rem, 2cqw, 1.05rem);
-    line-height: 1.45;
-    margin: 0.5rem 0 0;
-    text-align: left;
-  }
-
-  .skillList {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.7rem;
-  }
-
-  :global(.achievementCard),
-  :global(.certCard) {
+  .achievementPanel {
+    flex: 0 0 100vw;
     overflow: hidden;
-  }
-
-  .achievementTimeline {
-    margin: auto;
-    max-width: 1120px;
-    padding: 0.5rem 0 1rem;
-    position: relative;
-    width: min(92%, 1120px);
-  }
-
-  .achievementTimeline::before {
-    background: linear-gradient(to bottom, var(--color-accent), color-mix(in srgb, var(--color-accent), transparent 82%));
-    border-radius: 999px;
-    bottom: 0;
-    content: "";
-    left: 1.05rem;
-    position: absolute;
-    top: 1.2rem;
-    width: 3px;
-  }
-
-  .achievementItem {
-    display: grid;
-    gap: clamp(1rem, 3vw, 1.8rem);
-    grid-template-columns: 2.4rem minmax(0, 1fr);
-    margin-bottom: clamp(1.7rem, 5vw, 3.2rem);
-    position: relative;
-  }
-
-  .achievementMarker {
-    background: var(--color-accent);
-    border-radius: 50%;
-    box-shadow: 0 0 22px color-mix(in srgb, var(--color-accent), transparent 30%);
-    height: 1.35rem;
-    margin-left: 0.4rem;
-    margin-top: 0.35rem;
-    position: relative;
-    width: 1.35rem;
-    z-index: 1;
-  }
-
-  .achievementContent {
-    max-width: 980px;
-  }
-
-  .achievementBadge {
-    align-items: center;
-    display: flex;
-    min-height: 2rem;
-    margin-bottom: 0.55rem;
+    width: 100vw;
   }
 
   .achievementLogo {
     aspect-ratio: 220 / 64;
-    border-radius: 8px;
+    border-radius: 0;
     display: block;
     height: auto !important;
     object-fit: contain;
     position: static !important;
     scale: 1 !important;
-    width: min(9rem, 100%) !important;
+    width: min(12rem, 100%) !important;
   }
 
   .trophy {
@@ -741,7 +666,7 @@
   }
 
   .brandLogo {
-    border-radius: 6px;
+    border-radius: 0;
     color: white;
     display: inline-flex;
     font-weight: 900;
@@ -757,139 +682,59 @@
     background: #003545;
   }
 
-  .certPreview {
-    aspect-ratio: 16 / 10;
-    background: color-mix(in srgb, var(--color-card), white 18%);
-    border-radius: 10px;
-    height: auto;
-    object-fit: contain;
-    position: static;
-    width: 100%;
-  }
-
-  .certLink {
-    display: inline-block;
-    margin-top: 0.5rem;
-  }
-
-  .achievementContent h2 {
-    font-size: clamp(1.7rem, 4vw, 3rem);
-    line-height: 1.05;
-    margin: 0.15rem 0 0.35rem;
-  }
-
-  .achievementContent p:not(.metricLabel) {
-    font-size: clamp(1rem, 2vw, 1.35rem);
-    line-height: 1.35;
-    margin: 0;
-  }
-
-  :global(.projectCard #readmore) {
-    border-radius: 12px;
-    font-size: 1rem;
-    height: auto;
-    min-height: 2.75rem;
-    padding: 0.65rem 0.9rem;
-    width: 100%;
-  }
+  .certificateList{margin:auto;width:min(1120px,92%)}.certificateItem{align-items:center;border-top:1px solid #0a0b0a;display:grid;gap:clamp(1rem,4vw,4rem);grid-template-columns:3rem minmax(280px,1fr) minmax(240px,.65fr);padding:clamp(2rem,4vw,3.5rem) 0}.certificateCopy h2{color:#0a0b0a;font-family:"Rubik",sans-serif;font-size:clamp(1.8rem,3.6vw,3.5rem);line-height:.95;margin:0 0 .75rem}.certificateCopy p{line-height:1.45;margin:0 0 1rem}.certificateMedia{background:#fff;display:block;overflow:hidden}.certPreview{aspect-ratio:16/10;border-radius:0;height:auto;object-fit:contain;position:static;width:100%}
 
   @media (max-width: 760px) {
     :global(#welcomeHeader) {
       padding-top: 12.75rem;
     }
 
-    :global(#welcomeHeader h1),
-    :global(#welcomeHeader h2) {
-      text-align: center;
-    }
-
     :global(#welcomeHeader h1) {
-      font-size: clamp(3.4rem, 16vw, 5.6rem);
+      font-size: clamp(3.8rem, 19vw, 6.4rem);
+      line-height: 0.82;
     }
 
-    :global(#welcomeHeader h2) {
-      font-size: clamp(1.2rem, 7vw, 1.75rem);
+    .brand,
+    .heroSupport,
+    .heroText {
+      text-align: left !important;
+    }
+
+    .heroShapeOne {
+      right: 2%;
+      top: 28%;
+    }
+
+    .heroShapeTwo {
+      left: 55%;
+      top: 15%;
+    }
+
+    .sectionTitle {
+      font-size: clamp(2.65rem, 14vw, 4.7rem);
+      padding-top: 5rem;
     }
 
     .terminalWindow {
       border-radius: 14px;
     }
 
-    .statsGrid,
-    .sectionGrid {
-      grid-template-columns: 1fr;
+    .achievementScene {
+      padding-bottom: 1.5rem;
+      padding-top: 10rem;
     }
 
-    .projectTitle {
-      font-size: clamp(2rem, 13cqw, 3.4rem);
-    }
-  }
-
-  @media (hover: none), (max-width: 760px) {
-    :global(.projectCard) {
-      padding: 0.65rem;
-      transform: none !important;
-      width: min(100%, 34rem);
-    }
-
-    .imageArea {
-      aspect-ratio: unset;
-      display: grid;
-      gap: 0.85rem;
-    }
-
-    #mainImage {
-      aspect-ratio: 16 / 10;
-      border-radius: 14px;
-      height: auto;
-      object-fit: cover;
-      position: static;
-    }
-
-    .info {
-      align-items: stretch;
-      background: transparent;
-      border-radius: 0;
-      height: auto;
-      justify-content: start;
-      left: auto;
-      opacity: 1 !important;
-      overflow: visible;
-      padding: 0.25rem 0.2rem 0.4rem;
-      position: static;
-      scale: 1 !important;
+    .achievementProof {
+      left: 0;
+      right: auto;
       text-align: left;
-      top: auto;
-      width: auto;
     }
 
-    .infoContent {
-      gap: 0.9rem;
-      height: auto;
-      justify-content: start;
-      scale: 1;
+    .achievementProof.proofLong {
+      font-size: clamp(3.2rem, 15vw, 4.5rem);
     }
 
-    .projectTitle {
-      font-size: clamp(1.8rem, 11vw, 3rem);
-      line-height: 1;
-      margin-top: 0.35rem;
-    }
-
-    .summary {
-      font-size: 0.92rem;
-      line-height: 1.45;
-      margin: 0.5rem 0 0;
-    }
-
-    :global(#readmore) {
-      border-radius: 12px;
-      font-size: 1rem;
-      height: auto;
-      min-height: 2.75rem;
-      padding: 0.65rem 0.9rem;
-      width: 100%;
-    }
+    .aboutLine{grid-template-columns:2rem 1fr}.experienceRow{grid-template-columns:2rem 1fr}.experienceRow ul{grid-column:2}.projectFeature{grid-template-columns:1fr}.projectReverse .projectMedia{order:0}.projectTitle{font-size:clamp(2.7rem,13vw,4.2rem)}.achievementPanel{padding-left:1.25rem;padding-right:1.25rem}.achievementIntro h1{font-size:clamp(3.5rem,16vw,5.4rem)}.introRing{opacity:.35;right:-18%;top:18%}.achievementScene{align-content:center;gap:.75rem;grid-template-columns:1fr}.achievementVisual{height:34svh}.achievementProof{font-size:clamp(4.2rem,20vw,6rem);top:52%}.achievementChips{left:2%;top:12%}.achievementChip{font-size:.9rem}.achievementChip+ .achievementChip{margin-left:2rem}.shapeRing{bottom:0;right:2%}.shapeSpark{bottom:2%;left:4%}.achievementCopy{border-left:0;border-top:1px solid #363732;padding-left:0;padding-top:1rem}.achievementIndex span{font-size:1.5rem}.achievementBadge{min-height:2.5rem;margin-top:.5rem}.achievementScene h2{font-size:clamp(2.15rem,10vw,3.4rem);margin:.6rem 0}.achievementDetail{font-size:.9rem;line-height:1.35}.certificateItem{align-items:start;grid-template-columns:2rem 1fr}.certificateMedia{grid-column:2}.certificateCopy h2{font-size:clamp(2rem,10vw,3rem)}
   }
 
   @media (max-width: 430px) {
@@ -900,6 +745,10 @@
     .terminalBody {
       max-height: 14rem;
     }
+
+    .achievementIntro h1 {
+      font-size: clamp(3rem, 13vw, 4.4rem);
+    }
   }
 
   @media (min-width: 761px) and (max-width: 1180px) {
@@ -907,10 +756,7 @@
       padding-top: 8.75rem;
     }
 
-    .sectionGrid,
-    .statsGrid {
-      width: min(94%, 1100px);
-    }
+    .projectFeature{grid-template-columns:1.05fr .95fr}
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -918,10 +764,7 @@
       animation: none;
     }
 
-    :global(.projectCard) {
-      transform: none !important;
-      transition: none;
-    }
+    .horizontalAchievements{height:auto;overflow:visible}.achievementRail{display:grid;height:auto;width:100%}.achievementPanel,.achievementIntro{min-height:80svh;min-width:0}.achievementPanel::after{left:4%;right:4%;top:auto;width:auto}
   }
 
   @keyframes blink {
@@ -929,9 +772,6 @@
   }
 
   @media (min-width: 1024px) {
-    .sectionTitle {
-      font-size: 4rem;
-      padding: 40px;
-    }
+    .sectionTitle { padding-left: 0; padding-right: 0; }
   }
 </style>

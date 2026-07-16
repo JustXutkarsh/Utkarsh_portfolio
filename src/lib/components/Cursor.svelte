@@ -37,20 +37,17 @@
         let currentX = 0,
             currentY = 0;
 
-        document.addEventListener("mousemove", (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        });
-
+        let frameId;
         const animate = () => {
+            if (!pointerWrapper?.isConnected) return;
             const { width: w, height: h } =
                 pointerWrapper.getBoundingClientRect();
             currentX += (mouseX - currentX) * 0.15;
             currentY += (mouseY - currentY) * 0.15;
             pointerWrapper.style.transform = `translate(${currentX - w / 2}px, ${currentY - h / 2}px)`;
-            requestAnimationFrame(animate);
+            frameId = requestAnimationFrame(animate);
         };
-        requestAnimationFrame(animate);
+        frameId = requestAnimationFrame(animate);
 
         const attachListeners = () => {
             document.querySelectorAll(".interactable").forEach((el) => {
@@ -162,6 +159,13 @@
         attachListeners();
         const observer = new MutationObserver(attachListeners);
         observer.observe(document.body, { childList: true, subtree: true });
+
+        return () => {
+            cancelAnimationFrame(frameId);
+            observer.disconnect();
+            window.removeEventListener("pointermove", updateCursor);
+            window.removeEventListener("pointerdown", updateCursor);
+        };
     });
 </script>
 

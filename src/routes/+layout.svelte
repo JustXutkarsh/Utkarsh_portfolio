@@ -74,12 +74,16 @@
     <div class="routeFrame" class:routeTransitioning>
       {@render children?.()}
     </div>
-    <footer class="footer card">
-      <p class="altText">Utkarsh Pandey • Pune, India</p>
-      <div class="footerLinks">
+    <footer class="footer">
+      <p class="footerKicker">PUNE, INDIA · AVAILABLE FOR AI ENGINEERING WORK</p>
+      <h2>LET'S BUILD<br /><span>INTELLIGENT SYSTEMS.</span></h2>
+      <div class="footerBottom">
+        <p>UTKARSH PANDEY · 2026</p>
+        <div class="footerLinks">
         {#each socials as social}
-          <a href={social.url} target={social.url.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">{social.label}</a>
+            <a href={social.url} target={social.url.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">{social.label} ↗</a>
         {/each}
+        </div>
       </div>
     </footer>
   </div>
@@ -87,26 +91,63 @@
 
 <style>
   .footer {
-    aspect-ratio: unset;
-    border-radius: 0;
+    background: #080807;
     box-sizing: border-box;
-    margin-bottom: 0;
-    padding: 1.5rem 1rem 2rem;
-    text-align: center;
+    color: #f5f1df;
+    padding: clamp(5rem, 10vw, 9rem) max(4vw, calc((100vw - 1120px) / 2));
     width: 100%;
+  }
+
+  .footerKicker,
+  .footerBottom {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+  }
+
+  .footerKicker {
+    color: #90ead6;
+  }
+
+  .footer h2 {
+    font-family: "Rubik", sans-serif;
+    font-size: clamp(3.4rem, 10vw, 9rem);
+    line-height: 0.8;
+    margin: clamp(2rem, 5vw, 4rem) 0 clamp(4rem, 8vw, 7rem);
+  }
+
+  .footer h2 span {
+    color: #ff8068;
+  }
+
+  .footerBottom {
+    align-items: center;
+    border-top: 1px solid #363732;
+    display: flex;
+    justify-content: space-between;
+    padding-top: 1.25rem;
+  }
+
+  .footerBottom p {
+    margin: 0;
   }
 
   .footerLinks {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.9rem;
-    justify-content: center;
-    padding-top: 0.75rem;
+    gap: 1.25rem;
+    justify-content: flex-end;
   }
 
   .footerLinks a {
+    color: #f5f1df;
     display: inline-flex;
     line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .footerLinks a:hover,
+  .footerLinks a:focus-visible {
+    color: #90ead6;
   }
 
   .routeFrame {
@@ -123,6 +164,28 @@
   @media (prefers-reduced-motion: reduce) {
     .routeFrame {
       transition: none;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .footer {
+      padding-left: 1.25rem;
+      padding-right: 1.25rem;
+    }
+
+    .footer h2 {
+      font-size: clamp(2.7rem, 11vw, 4.2rem);
+    }
+
+    .footerBottom {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .footerLinks {
+      gap: 1rem;
+      justify-content: flex-start;
     }
   }
 </style>

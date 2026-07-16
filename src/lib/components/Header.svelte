@@ -78,17 +78,12 @@
 
 <style>
   #header {
-    -webkit-backdrop-filter: blur(28px) saturate(185%) contrast(1.08);
-    backdrop-filter: blur(28px) saturate(185%) contrast(1.08);
-    background:
-      linear-gradient(135deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08) 42%, rgba(161, 243, 222, 0.12)),
-      color-mix(in srgb, var(--color-background), transparent 62%);
-    border: 1px solid rgba(255, 255, 255, 0.38);
-    border-radius: 999px;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.72),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.12),
-      0 18px 55px color-mix(in srgb, var(--color-primary), transparent 74%);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: #080807;
+    border: 1px solid #f5f1df;
+    border-radius: 0;
+    box-shadow: 0.55rem 0.55rem 0 #90ead6;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -98,14 +93,14 @@
     left: 50%;
     margin: 0;
     max-width: 1320px;
-    min-height: 72px;
-    padding: 0.65rem 1rem;
+    min-height: 64px;
+    padding: 0.45rem 0.75rem;
     position: fixed;
     right: auto;
     top: 1rem;
     transform: translateX(-50%);
     width: min(calc(100vw - 2rem), 1320px);
-    overflow: hidden;
+    overflow: visible;
     isolation: isolate;
   }
 
@@ -113,30 +108,28 @@
   #header::after {
     content: "";
     position: absolute;
-    inset: 0;
-    border-radius: inherit;
     pointer-events: none;
     z-index: -1;
   }
 
   #header::before {
-    background:
-      radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.72), transparent 24%),
-      radial-gradient(circle at 86% 110%, color-mix(in srgb, var(--color-accent), transparent 58%), transparent 34%),
-      linear-gradient(100deg, transparent 8%, rgba(255, 255, 255, 0.22) 46%, transparent 62%);
-    opacity: 0.86;
+    background: #ff8068;
+    height: 4px;
+    left: -1px;
+    top: -1px;
+    width: 18%;
   }
 
   #header::after {
-    inset: 1px;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    box-shadow:
-      inset 12px 12px 34px rgba(255, 255, 255, 0.08),
-      inset -14px -12px 28px rgba(0, 0, 0, 0.16);
+    background: #ff9bea;
+    bottom: -0.55rem;
+    height: 0.55rem;
+    right: -0.55rem;
+    width: 9%;
   }
 
   #logoHeader {
-    color: var(--color-primary);
+    color: #90ead6;
     flex: 0 0 auto;
     display: grid;
     height: 48px;
@@ -176,14 +169,14 @@
   .commandHint {
     align-items: center;
     border: 0;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.02);
-    color: var(--title-text);
+    border-radius: 0;
+    background: transparent;
+    color: #f5f1df;
     cursor: pointer;
     display: inline-flex;
-    font-family: inherit;
-    font-size: clamp(0.78rem, 1vw, 0.95rem);
-    font-weight: 800;
+    font-family: var(--font-mono);
+    font-size: clamp(0.7rem, 0.85vw, 0.82rem);
+    font-weight: 700;
     gap: 0.35rem;
     line-height: 1;
     padding: 0.62rem 0.75rem;
@@ -193,11 +186,12 @@
     text-align: center;
     text-decoration: none;
     width: auto !important;
-    transition: background 0.22s ease, box-shadow 0.22s ease, color 0.22s ease;
+    text-transform: uppercase;
+    transition: background 0.22s ease, color 0.22s ease;
   }
 
   .socialText svg {
-    color: var(--color-primary);
+    color: #90ead6;
     flex: 0 0 auto;
     height: 1.05rem;
     width: 1.05rem;
@@ -216,18 +210,15 @@
   .headerButton:focus-visible,
   .socialText:focus-visible,
   .commandHint:focus-visible {
-    background:
-      linear-gradient(135deg, rgba(255, 255, 255, 0.45), color-mix(in srgb, var(--color-accent), transparent 72%));
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.65),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.18),
-      0 10px 28px color-mix(in srgb, var(--color-accent), transparent 78%);
-    color: var(--title-text);
+    background: #90ead6;
+    box-shadow: none;
+    color: #080807;
   }
 
   .commandHint {
-    border: 1px solid color-mix(in srgb, var(--color-accent), transparent 44%);
-    color: var(--color-accent);
+    background: #ff8068;
+    border: 1px solid #ff8068;
+    color: #080807;
     font-family: var(--font-mono);
     padding-inline: 0.58rem;
   }
@@ -267,10 +258,11 @@
 
   @media (max-width: 560px) {
     #header {
-      border-radius: 18px;
+      border-radius: 0;
       grid-template-columns: 1fr;
       padding: 0.55rem;
       row-gap: 0.4rem;
+      width: calc(100vw - 1.5rem);
     }
 
     #logoHeader {
