@@ -17,14 +17,23 @@
   let { children } = $props();
   let content;
   let smoothWrapper;
+  let smoothScroller;
   let reducedMotion = $state(false);
   let routeTransitioning = $state(false);
   const socials = portfolioContent.socials;
 
-  afterNavigate(() => {
-    if (reducedMotion || typeof window === "undefined") return;
-    routeTransitioning = true;
-    window.setTimeout(() => routeTransitioning = false, 180);
+  afterNavigate(({ from, to }) => {
+    if (typeof window === "undefined") return;
+    if (from?.url.pathname && to?.url.pathname && from.url.pathname !== to.url.pathname) {
+      requestAnimationFrame(() => {
+        smoothScroller?.scrollTo(0, false);
+        window.scrollTo(0, 0);
+      });
+    }
+    if (!reducedMotion) {
+      routeTransitioning = true;
+      window.setTimeout(() => routeTransitioning = false, 180);
+    }
   });
 
   onMount(async () => {
@@ -40,7 +49,7 @@
 
     gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
     if (!reducedMotion && window.innerWidth > 760) {
-      ScrollSmoother.create({ wrapper: smoothWrapper, content, smooth: 0.45, effects: false });
+      smoothScroller = ScrollSmoother.create({ wrapper: smoothWrapper, content, smooth: 0.45, effects: false });
     }
   });
 </script>

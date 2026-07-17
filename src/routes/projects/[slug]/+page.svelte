@@ -1,138 +1,68 @@
 <script>
-  import Button from "$lib/components/Button.svelte";
   import { projectImage } from "$lib/logic/data.js";
   import { renderBody, formatDateTime } from "$lib/logic/formatter";
-  import gsap from "gsap";
-  import { onMount } from "svelte";
 
   export let data;
 
-  let mainImage;
-
   const project = data.project;
-
-  function onEnter() {
-    gsap.to(mainImage, {
-      filter: "blur(10px)",
-      duration: 0.3,
-    });
-  }
-
-  function onLeave() {
-    gsap.to(mainImage, {
-      filter: "blur(0px)",
-      duration: 0.3,
-    });
-  }
-
-  onMount(async () => {
-    await import("@google/model-viewer");
-  });
+  const categories = project.categories || [];
+  const technologies = project.subcategories || [];
 </script>
 
 <svelte:head>
   <title>{project.title} | Utkarsh Pandey</title>
+  <meta name="description" content={project.summary || `${project.title} by Utkarsh Pandey`} />
 </svelte:head>
-<img
-  id="mainImage"
-  bind:this={mainImage}
-  loading="lazy"
-  fetchpriority="low"
-  src={projectImage(project)}
-  alt={project.mainImage?.alt || project.title}
-/>
-<div id="content">
-  <Button
-    text="Go Back"
-    className="goBack"
-    link="/goback"
-    on:mouseenter={onEnter}
-    on:mouseleave={onLeave}
-  ></Button>
-  <p id="date">{formatDateTime(project.created)}</p>
-  <h1 id="title">{project.title}</h1>
-  <div id="postCategories">
-    {#if project.featured}
-      <p class="tag" id="featured">Featured</p>
-    {/if}
-    {#each project.categories || [] as category}
-      <p class="tag">{category.title}</p>
-    {/each}
-  </div>
-  <div id="postSubCategories">
-    {#each project.subcategories || [] as subcategory}
-      <p class="tag1">{subcategory.title}</p>
-    {/each}
-  </div>
-  <div class="post-body">
-    {@html renderBody(project.body || [])}
-  </div>
-  <div class="postButtons">
-    {#each project.links || [] as button}
-      <Button link={button.url} text={button.label} className="postButton"
-      ></Button>
-    {/each}
-  </div>
-</div>
+
+<main class="projectPage">
+  <section class="projectHero">
+    <div class="projectUtility">
+      <a href="/#projectsSection">← Back to projects</a>
+      <time>{formatDateTime(project.created)}</time>
+    </div>
+
+    <div class="projectLead">
+      <div class="projectIntro">
+        <p class="eyebrow">AI PROJECT RECORD</p>
+        <h1>{project.title}</h1>
+        <p class="projectSummary">{project.summary}</p>
+
+        <div class="tagRail" aria-label="Project categories">
+          {#if project.featured}<span class="tag featured">Featured</span>{/if}
+          {#each categories as category}<span class="tag">{category.title}</span>{/each}
+        </div>
+
+        {#if project.links?.length}
+          <div class="projectActions">
+            {#each project.links as link}
+              <a class="actionLink" href={link.url} target="_blank" rel="noopener noreferrer">{link.label} <span>↗</span></a>
+            {/each}
+          </div>
+        {/if}
+      </div>
+
+      <figure class="projectVisual">
+        <img src={projectImage(project)} alt={project.mainImage?.alt || project.title} fetchpriority="high" />
+        <figcaption>System view · {project.title}</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="projectBuild" aria-label={`${project.title} build notes`}>
+    <p class="buildLabel">01 / BUILD NOTES</p>
+    <div class="projectDetails">
+      <div class="bodyCopy">{@html renderBody(project.body || [])}</div>
+      {#if technologies.length}
+        <aside class="technologyList">
+          <p>TOOLS IN THE SYSTEM</p>
+          <ul>{#each technologies as technology}<li>{technology.title}</li>{/each}</ul>
+        </aside>
+      {/if}
+    </div>
+  </section>
+</main>
 
 <style>
-  #content {
-    padding: 4%;
-    padding-bottom: 0;
-  }
-
-  #mainImage {
-    border-radius: 0;
-    width: 100%;
-    height: 500px;
-    object-fit: cover;
-  }
-
-  #date {
-    font-size: larger;
-  }
-
-  #title {
-    font-size: 300%;
-    margin-top: 0;
-    margin-bottom: 15px;
-    width: 100%;
-  }
-
-  .tag {
-    width: auto !important;
-    padding: 10px !important;
-    background-color: var(--color-primary) !important;
-    color: var(--color-text) !important;
-    font-weight: bold;
-    margin-bottom: 0;
-  }
-
-  .tag1 {
-    padding: 20px !important;
-    background-color: var(--color-card) !important;
-    color: var(--color-text) !important;
-    font-weight: bold;
-    text-align: center;
-    border-radius: 3px;
-    border: 1px solid var(--color-card-outline);
-    align-items: center;
-    display: flex;
-    margin-bottom: 0;
-  }
-
-  #postCategories,
-  #postSubCategories {
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-
-  @media (min-width: 1024px) {
-    #title {
-      font-size: 300%;
-    }
-  }
+  .projectPage{background:#f5f1df;color:#0a0b0a;min-height:100svh}.projectHero{box-sizing:border-box;min-height:100svh;padding:clamp(8rem,12vw,11rem) max(4vw,calc((100vw - 1180px)/2)) clamp(4rem,8vw,8rem)}.projectUtility{align-items:center;border-bottom:2px solid #0a0b0a;display:flex;font-family:var(--font-mono);font-size:.72rem;justify-content:space-between;padding-bottom:.85rem;text-transform:uppercase}.projectUtility a{color:inherit;text-decoration:none}.projectUtility a:hover,.actionLink:hover{color:#176d5d}.projectLead{align-items:center;display:grid;gap:clamp(2.5rem,6vw,6rem);grid-template-columns:minmax(0,.95fr) minmax(320px,1.05fr);padding-top:clamp(2rem,6vh,5rem)}.eyebrow,.buildLabel,.technologyList p,.projectVisual figcaption{color:#176d5d;font-family:var(--font-mono);font-size:.72rem;font-weight:700;margin:0;text-transform:uppercase}.projectIntro h1{font-family:"Rubik",sans-serif;font-size:clamp(4rem,9vw,9.5rem);line-height:.78;margin:1.4rem 0 1.8rem;text-transform:uppercase}.projectSummary{font-size:clamp(1.1rem,1.8vw,1.45rem);line-height:1.45;margin:0;max-width:43rem}.tagRail{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:2rem}.tag{background:#0a0b0a;color:#f5f1df;font-family:var(--font-mono);font-size:.68rem;padding:.5rem .65rem;text-transform:uppercase}.tag.featured{background:#ff8068;color:#0a0b0a}.projectActions{display:flex;flex-wrap:wrap;gap:1.5rem;margin-top:2.5rem}.actionLink{border-bottom:2px solid currentColor;color:#0a0b0a;font-family:var(--font-mono);font-size:.78rem;padding:.5rem 0;text-decoration:none;text-transform:uppercase}.actionLink span{color:#ff6f59}.projectVisual{aspect-ratio:16/10;background:#0c1320;border:1px solid #0a0b0a;box-shadow:.8rem .8rem 0 #90ead6;box-sizing:border-box;margin:0;overflow:hidden;padding:clamp(.5rem,1vw,1rem);position:relative}.projectVisual img{display:block;height:100%;object-fit:contain;width:100%}.projectVisual figcaption{background:#f5f1df;bottom:0;color:#0a0b0a;left:0;padding:.45rem .65rem;position:absolute}.projectBuild{background:#0a0b0a;color:#f5f1df;min-height:55svh;padding:clamp(4rem,8vw,8rem) max(4vw,calc((100vw - 1180px)/2))}.buildLabel{color:#90ead6}.projectDetails{border-top:1px solid #3d3f39;display:grid;gap:clamp(2rem,7vw,8rem);grid-template-columns:minmax(0,1fr) minmax(230px,.52fr);margin-top:2rem;padding-top:2rem}.bodyCopy{font-size:clamp(1.2rem,2vw,1.7rem);line-height:1.5;max-width:48rem}.bodyCopy :global(p){margin:0}.technologyList{border-left:1px solid #3d3f39;padding-left:clamp(1.25rem,3vw,3rem)}.technologyList p{color:#90ead6}.technologyList ul{font-family:"Rubik",sans-serif;font-size:clamp(1.35rem,2.4vw,2.2rem);line-height:1.05;list-style:none;margin:1.2rem 0 0;padding:0}.technologyList li{border-bottom:1px solid #3d3f39;padding:.55rem 0}.technologyList li::before{color:#ff8068;content:"+ ";font-family:var(--font-mono)}
+  @media(max-width:760px){.projectHero{padding:8.5rem 1.25rem 4.5rem}.projectUtility{align-items:flex-start;gap:1rem}.projectUtility time{max-width:9rem;text-align:right}.projectLead{display:grid;gap:2.5rem;grid-template-columns:1fr;padding-top:2.25rem}.projectIntro h1{font-size:clamp(3.2rem,16vw,5rem);line-height:.82}.projectSummary{font-size:1rem}.projectVisual{box-shadow:.45rem .45rem 0 #90ead6}.projectBuild{min-height:50svh;padding:4rem 1.25rem}.projectDetails{grid-template-columns:1fr}.technologyList{border-left:0;border-top:1px solid #3d3f39;padding-left:0;padding-top:1.5rem}.bodyCopy{font-size:1.1rem}.projectActions{gap:1rem;margin-top:2rem}}
 </style>
