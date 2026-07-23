@@ -26,6 +26,14 @@
     if (typeof window === "undefined") return;
     if (from?.url.pathname && to?.url.pathname && from.url.pathname !== to.url.pathname) {
       requestAnimationFrame(() => {
+        const target = to.url.hash ? document.querySelector(to.url.hash) : null;
+        if (target) {
+          const headerOffset = (document.querySelector("#header")?.getBoundingClientRect().bottom || 0) + 16;
+          const targetTop = Math.max(0, target.getBoundingClientRect().top + window.scrollY - headerOffset);
+          smoothScroller?.scrollTo(targetTop, false);
+          window.scrollTo(0, targetTop);
+          return;
+        }
         smoothScroller?.scrollTo(0, false);
         window.scrollTo(0, 0);
       });
