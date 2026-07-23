@@ -22,18 +22,26 @@
   let routeTransitioning = $state(false);
   const socials = portfolioContent.socials;
 
+  function scrollToRouteTarget(hash) {
+    requestAnimationFrame(() => {
+      const target = hash ? document.querySelector(hash) : null;
+      if (!target) return;
+      const headerOffset = (document.querySelector("#header")?.getBoundingClientRect().bottom || 0) + 16;
+      if (smoothScroller) {
+        smoothScroller.scrollTo(target, false, `top ${headerOffset}px`);
+        return;
+      }
+      const targetTop = Math.max(0, target.getBoundingClientRect().top + window.scrollY - headerOffset);
+      window.scrollTo(0, targetTop);
+    });
+  }
+
   afterNavigate(({ from, to }) => {
     if (typeof window === "undefined") return;
-    if (from?.url.pathname && to?.url.pathname && from.url.pathname !== to.url.pathname) {
+    if (to?.url.hash) {
+      scrollToRouteTarget(to.url.hash);
+    } else if (from?.url.pathname && to?.url.pathname && from.url.pathname !== to.url.pathname) {
       requestAnimationFrame(() => {
-        const target = to.url.hash ? document.querySelector(to.url.hash) : null;
-        if (target) {
-          const headerOffset = (document.querySelector("#header")?.getBoundingClientRect().bottom || 0) + 16;
-          const targetTop = Math.max(0, target.getBoundingClientRect().top + window.scrollY - headerOffset);
-          smoothScroller?.scrollTo(targetTop, false);
-          window.scrollTo(0, targetTop);
-          return;
-        }
         smoothScroller?.scrollTo(0, false);
         window.scrollTo(0, 0);
       });
@@ -59,6 +67,7 @@
     if (!reducedMotion && window.innerWidth > 760) {
       smoothScroller = ScrollSmoother.create({ wrapper: smoothWrapper, content, smooth: 0.45, effects: false });
     }
+    if (window.location.hash) scrollToRouteTarget(window.location.hash);
   });
 </script>
 
