@@ -1,7 +1,9 @@
 <script>
   import gsap from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
+
+  let fade;
 
   export let pageHeader;
 
@@ -14,16 +16,19 @@
       className = ` ${className}`;
     }
     gsap.registerPlugin(ScrollTrigger);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    gsap.to(pageHeader, {
+    fade = gsap.to(pageHeader, {
       opacity: 0,
       scrollTrigger: {
-        start: "top top",
-        end: "+=500",
+        trigger: pageHeader,
+        start: "bottom 25%",
+        end: "bottom top",
         scrub: 0.5,
       },
     });
   });
+  onDestroy(() => { fade?.scrollTrigger?.kill(); fade?.kill(); });
 </script>
 
 <div bind:this={pageHeader} {id} class="pageHeader{className}" {style}>

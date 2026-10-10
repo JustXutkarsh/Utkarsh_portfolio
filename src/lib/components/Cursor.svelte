@@ -221,4 +221,7 @@
         opacity: 0.82;
         width: 28px;
     }
+    @media (max-width: 760px), (pointer: coarse), (prefers-reduced-motion: reduce) {
+        .pointer-wrapper { display: none !important; }
+    }
 </style>

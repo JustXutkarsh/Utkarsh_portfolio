@@ -1,17 +1,11 @@
-let gsap;
-let ScrollToPlugin;
-
+import { gsap } from "gsap";
+import { ScrollToPlugin } from "gsap/ScrollToPlugin";
+import { ScrollSmoother } from "gsap/ScrollSmoother";
 import { Howl } from "howler";
+import { goto } from "$app/navigation";
 
-export async function initGSAP() {
+export function initGSAP() {
   if (typeof window === "undefined") return;
-
-  const gsapModule = await import("gsap");
-  const scrollModule = await import("gsap/ScrollToPlugin");
-
-  gsap = gsapModule.gsap;
-  ScrollToPlugin = scrollModule.ScrollToPlugin;
-
   gsap.registerPlugin(ScrollToPlugin);
 }
 
@@ -53,6 +47,15 @@ export function getCSSVariable(variable) {
 }
 
 export function scrollTo(place) {
-  if (!gsap) return;
-  gsap.to(window, { duration: 0.3, scrollTo: place, ease: "sine.out" });
+  const target = document.querySelector(place);
+  if (!target) { goto(`/${place}`); return; }
+  const offset = (document.querySelector("#header")?.getBoundingClientRect().bottom || 0) + 16;
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const smoother = ScrollSmoother?.get();
+  if (smoother) { smoother.scrollTo(target, !reduced, `top ${offset}px`); return; }
+  if (!reduced) {
+    gsap.to(window, { duration: 0.65, scrollTo: { y: target, offsetY: offset }, ease: "power2.inOut" });
+  } else {
+    window.scrollTo(0, Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset));
+  }
 }

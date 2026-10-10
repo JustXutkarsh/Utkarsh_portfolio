@@ -13,6 +13,9 @@
   import { injectAnalytics } from "@vercel/analytics/sveltekit";
   import { injectSpeedInsights } from "@vercel/speed-insights/sveltekit";
   import { initGSAP } from "$lib/logic/globalFunctions";
+  import gsap from "gsap";
+  import { ScrollSmoother } from "gsap/ScrollSmoother";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
 
   let { children } = $props();
   let content;
@@ -52,22 +55,21 @@
     }
   });
 
-  onMount(async () => {
-    await initGSAP();
+  onMount(() => {
+    initGSAP();
     injectAnalytics();
     injectSpeedInsights();
 
-    const gsapModule = await import("gsap");
-    const { ScrollSmoother } = await import("gsap/ScrollSmoother");
-    const { ScrollTrigger } = await import("gsap/ScrollTrigger");
-    const gsap = gsapModule.default;
     reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
-    if (!reducedMotion && window.innerWidth > 760) {
+    const media = gsap.matchMedia();
+    media.add("(min-width: 761px) and (prefers-reduced-motion: no-preference)", () => {
       smoothScroller = ScrollSmoother.create({ wrapper: smoothWrapper, content, smooth: 0.45, effects: false });
-    }
+      return () => { smoothScroller?.kill(); smoothScroller = null; };
+    });
     if (window.location.hash) scrollToRouteTarget(window.location.hash);
+    return () => media.revert();
   });
 </script>
 

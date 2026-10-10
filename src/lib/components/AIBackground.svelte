@@ -29,7 +29,7 @@
     }
 
     function draw(time = 0) {
-      frame = requestAnimationFrame(draw);
+      if (!reduced) frame = requestAnimationFrame(draw);
       if (!reduced && time - lastDraw < 33) return;
       lastDraw = time;
       const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -86,12 +86,13 @@
 
     resize();
     draw();
-    window.addEventListener("resize", resize);
+    function handleResize() { resize(); if (reduced) draw(); }
+    window.addEventListener("resize", handleResize);
     window.addEventListener("pointermove", move);
 
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener("resize", resize);
+      window.removeEventListener("resize", handleResize);
       window.removeEventListener("pointermove", move);
     };
   });

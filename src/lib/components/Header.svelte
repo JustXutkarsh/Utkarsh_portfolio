@@ -6,6 +6,8 @@
 
   let header;
   let logoHeader;
+  let activeSection = "home";
+  let scrollProgress = 0;
   const socials = portfolioContent.socials;
 
   function iconPath(label) {
@@ -17,6 +19,25 @@
 
   onMount(() => {
     const links = header.querySelectorAll("a, button");
+    let frame;
+    function updateNavigation() {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        scrollProgress = max > 0 ? Math.min(1, window.scrollY / max) : 0;
+        activeSection = "";
+        for (const [id, key] of [["welcomeHeader", "home"], ["projectsSection", "projects"], ["achievementsSection", "achievements"]]) {
+          const section = document.getElementById(id);
+          if (!section) continue;
+          const bounds = section.getBoundingClientRect();
+          const line = header.getBoundingClientRect().bottom + 50;
+          if (bounds.top <= line && bounds.bottom > line) activeSection = key;
+        }
+      });
+    }
+    window.addEventListener("scroll", updateNavigation, { passive: true });
+    window.addEventListener("resize", updateNavigation);
+    updateNavigation();
 
     links.forEach((item) => {
       item.addEventListener("mouseenter", () => {
@@ -43,11 +64,12 @@
         duration: 0.25,
       });
     });
+    return () => { cancelAnimationFrame(frame); window.removeEventListener("scroll", updateNavigation); window.removeEventListener("resize", updateNavigation); };
   });
 </script>
 
-<header bind:this={header} id="header" class="card noBounce" aria-label="Primary navigation">
-  <a bind:this={logoHeader} id="logoHeader" href="/" aria-label="JustXutkarsh home">
+<header bind:this={header} id="header" class="card noBounce" aria-label="Primary navigation" style={`--progress:${scrollProgress}`}>
+  <a bind:this={logoHeader} id="logoHeader" href="/" aria-label="JustXutkarsh home" on:click|preventDefault={() => scrollTo("#welcomeHeader")}>
     <svg viewBox="0 0 96 96" aria-hidden="true">
       <path d="M24 16v34c0 15.5 9.8 25 24 25s24-9.5 24-25V16" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" />
       <path d="M24 29h-9m57 0h9M48 75v9" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" />
@@ -58,9 +80,9 @@
   </a>
 
   <nav class="buttons" aria-label="Sections">
-    <a class="headerButton interactable" href="/"><span class="navLabel" data-compact="Home">Home</span></a>
-    <button class="headerButton interactable" on:click={() => scrollTo("#projectsSection")}><span class="navLabel" data-compact="Work">Projects</span></button>
-    <button class="headerButton interactable" on:click={() => scrollTo("#achievementsSection")}><span class="navLabel" data-compact="Wins">Achievements</span></button>
+    <a class="headerButton interactable" class:active={activeSection === "home"} aria-current={activeSection === "home" ? "location" : undefined} href="/" on:click|preventDefault={() => scrollTo("#welcomeHeader")}><span class="navLabel" data-compact="Home">Home</span></a>
+    <button class="headerButton interactable" class:active={activeSection === "projects"} aria-current={activeSection === "projects" ? "location" : undefined} on:click={() => scrollTo("#projectsSection")}><span class="navLabel" data-compact="Work">Projects</span></button>
+    <button class="headerButton interactable" class:active={activeSection === "achievements"} aria-current={activeSection === "achievements" ? "location" : undefined} on:click={() => scrollTo("#achievementsSection")}><span class="navLabel" data-compact="Wins">Achievements</span></button>
     <button class="commandHint interactable" aria-label="Open command palette" on:click={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}>⌘K</button>
   </nav>
 
@@ -117,7 +139,7 @@
     height: 4px;
     left: -1px;
     top: -1px;
-    width: 18%;
+    width: calc(var(--progress, 0) * 100%);
   }
 
   #header::after {
@@ -189,6 +211,8 @@
     text-transform: uppercase;
     transition: background 0.22s ease, color 0.22s ease;
   }
+
+  .headerButton.active { color:#90ead6; background:#90ead615; box-shadow:inset 0 -2px #90ead6; }
 
   .socialText svg {
     color: #90ead6;
