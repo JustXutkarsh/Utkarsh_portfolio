@@ -3,11 +3,10 @@
   import { fetchHomeData, projectImage } from "$lib/logic/data.js";
   import KineticStory from "$lib/components/KineticStory.svelte";
   import PageHeader from "$lib/components/PageHeader.svelte";
-  import WireframeForms from "$lib/components/WireframeForms.svelte";
+  import GitHubActivity from "$lib/components/GitHubActivity.svelte";
   import { interactiveSurface } from "$lib/logic/visualEffects.js";
   import { scrollTo } from "$lib/logic/globalFunctions.js";
   import gsap from "gsap";
-  import { MorphSVGPlugin } from "gsap/MorphSVGPlugin.js";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
 
   let content;
@@ -120,63 +119,18 @@
   }
 
   function setupMotion(reducedMotion, heroDelay = 0) {
-    gsap.registerPlugin(ScrollTrigger, MorphSVGPlugin);
+    gsap.registerPlugin(ScrollTrigger);
     if (reducedMotion) return;
 
     motionContext = gsap.context(() => {
       const hero = gsap.timeline({ delay: heroDelay, defaults: { ease: "power4.out" } });
-      const nameWave = gsap.timeline({ paused: true, repeat: -1, repeatDelay: 1.15 });
-      const morphTimeline = gsap.timeline({
-        paused: true,
-        repeat: -1,
-        defaults: { duration: 1.35, ease: "expo.inOut" },
-      });
-      ["#heroSpeech", "#heroRocket", "#heroLightning", "#heroGrid", "#heroBulb", "#heroCoilTarget"].forEach((target) => {
-        morphTimeline.to("#heroMorph", { morphSVG: target });
-      });
-      nameWave
-        .to(".heroLetter", {
-          yPercent: -10,
-          rotate: (index) => index % 2 ? 4 : -4,
-          duration: 0.38,
-          stagger: 0.045,
-          ease: "power2.out",
-        })
-        .to(".heroLetter", {
-          yPercent: 0,
-          rotate: 0,
-          duration: 0.42,
-          stagger: 0.045,
-          ease: "power2.inOut",
-        }, "-=0.22");
       hero
-        .from(".heroLetter", { autoAlpha: 0, yPercent: 125, rotate: 7, duration: 0.85, stagger: 0.045 })
-        .from(".heroKicker", { autoAlpha: 0, y: 18, duration: 0.55 }, 0.2)
-        .from(".heroSupport", { autoAlpha: 0, y: 34, duration: 0.8 }, 0.48)
-        .from(".heroText, .heroMeta", { autoAlpha: 0, y: 22, duration: 0.65, stagger: 0.08 }, 0.62)
-        .from(".terminalWindow", { autoAlpha: 0, y: 42, scale: 0.97, duration: 0.85 }, 0.72)
-        .from(".heroSculpture", { autoAlpha: 0, scale: 0.85, duration: 1.1 }, 0.72)
-        .from(".heroActions", { autoAlpha: 0, y: 18, duration: 0.65 }, 0.65)
-        .from(".heroShape", { autoAlpha: 0, scale: 0, rotate: -90, duration: 0.8, stagger: 0.12 }, 0.28)
-        .from(".heroCoil", { autoAlpha: 0, scale: 0.75, rotate: -12, duration: 0.65 }, 0.18)
-        .to("#heroMorph", { strokeDashoffset: 0, duration: 1.15, ease: "power2.inOut" }, 0.28)
-        .from(".heroSignalBar", { autoAlpha: 0, scaleX: 0, duration: 0.5, stagger: 0.08 }, 0.58)
-        .call(() => {
-          nameWave.play(0);
-          morphTimeline.play(0);
-        });
-
-      gsap.to(".heroCoil", { y: 12, rotate: 4, duration: 2.8, ease: "sine.inOut", repeat: -1, yoyo: true });
-      gsap.to(".heroSignalBar", { x: (index) => index % 2 ? 8 : -8, duration: 1.4, ease: "sine.inOut", repeat: -1, stagger: 0.14, yoyo: true });
-
-      gsap.fromTo(".heroWordMask:first-child .heroWord", { xPercent: 0 }, {
-        xPercent: -6,
-        scrollTrigger: { trigger: "#welcomeHeader", start: "top top", end: "bottom top", scrub: 0.7 },
-      });
-      gsap.fromTo(".heroWordMask:last-child .heroWord", { xPercent: 0 }, {
-        xPercent: 6,
-        scrollTrigger: { trigger: "#welcomeHeader", start: "top top", end: "bottom top", scrub: 0.7 },
-      });
+        .from(".heroLetter", { yPercent: 110, duration: 0.9, stagger: 0.028 })
+        .from(".heroKicker", { autoAlpha: 0, y: 12, duration: 0.5 }, 0.1)
+        .from(".heroSupport, .heroText, .heroMeta", { autoAlpha: 0, y: 18, duration: 0.65, stagger: 0.07 }, 0.35)
+        .from(".heroActions", { autoAlpha: 0, y: 14, duration: 0.6 }, 0.6)
+        .from(".heroActivity", { autoAlpha: 0, y: 20, duration: 0.8 }, 0.55)
+        .from(".terminalWindow", { autoAlpha: 0, y: 24, duration: 0.75 }, 0.7);
 
       gsap.utils.toArray(".revealSection").forEach((section) => {
         const titleWords = section.querySelectorAll(".sectionWord");
@@ -285,35 +239,13 @@
       </svg>
       <div class="headerContent">
         <p class="brand heroKicker">{content.hero.brand} · AI ENGINEER <span class="heroAvailability"><i></i> OPEN TO COLLABORATE</span></p>
+        <div class="heroComposition">
+        <div class="heroIdentity">
         <h1 class="kineticName" aria-label={content.hero.name}>
           {#each words(content.hero.name) as word}
-            <span class="heroWordMask"><span class="heroWord">{#each Array.from(word) as letter}<span class="heroLetter">{letter}</span>{/each}</span></span>
+            <span class="heroWordMask"><span class="heroWord" aria-hidden="true">{#each Array.from(word) as letter}<span class="heroLetter">{letter}</span>{/each}</span></span>
           {/each}
         </h1>
-        <span class="heroShape heroShapeOne" aria-hidden="true"></span>
-        <span class="heroShape heroShapeTwo" aria-hidden="true"></span>
-        <span class="heroCoil" aria-hidden="true">
-          <svg viewBox="0 0 100 220" role="presentation">
-            <defs>
-              <linearGradient id="heroCoilGradient" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="#90ead6" />
-                <stop offset="0.52" stop-color="#ff9bea" />
-                <stop offset="1" stop-color="#ff8068" />
-              </linearGradient>
-            </defs>
-            <g class="heroMorphTargets">
-              <path id="heroCoilTarget" d="M54 9C20 18 21 43 55 49C88 55 88 79 54 86C21 93 22 119 58 127C91 135 89 159 57 171C34 180 39 199 58 208" />
-              <path id="heroSpeech" d="M15 45Q15 20 40 20H80Q105 20 105 45V120Q105 145 80 145H58L30 185V145H40Q15 145 15 120Z" />
-              <path id="heroRocket" d="M58 12C82 34 92 68 87 108L100 132L78 126L69 166H47L38 126L16 132L28 108C23 68 34 34 58 12ZM58 62A13 13 0 1 0 58 88A13 13 0 1 0 58 62ZM48 176L58 208L68 176Z" />
-              <path id="heroLightning" d="M70 10L24 112H56L44 205L98 87H66Z" />
-              <path id="heroGrid" d="M14 24H48V78H14ZM68 24H102V78H68ZM14 98H48V152H14ZM68 98H102V152H68ZM38 172H78V206H38Z" />
-              <path id="heroBulb" d="M58 12C27 12 10 35 10 65C10 88 23 102 38 116V145H78V116C93 102 106 88 106 65C106 35 89 12 58 12ZM39 163H77M43 181H73M49 199H67" />
-            </g>
-            <use class="heroCoilGlow" href="#heroMorph" />
-            <path id="heroMorph" class="heroMorphPath" pathLength="1" d="M54 9C20 18 21 43 55 49C88 55 88 79 54 86C21 93 22 119 58 127C91 135 89 159 57 171C34 180 39 199 58 208" />
-          </svg>
-        </span>
-        <span class="heroSignal" aria-hidden="true"><i class="heroSignalBar"></i><i class="heroSignalBar"></i><i class="heroSignalBar"></i></span>
         <h2 class="heroSupport">{content.hero.title}</h2>
         <p class="heroText">{content.hero.subtitle}</p>
         <div class="heroMeta">
@@ -323,8 +255,10 @@
           <a class="heroAction interactable" href="#projectsSection" on:click|preventDefault={() => scrollTo("#projectsSection")}>Explore my work <span>↘</span></a>
           <a class="heroContact interactable" href="mailto:utkarshp034@gmail.com">Let's build something <span>↗</span></a>
         </div>
+        </div>
+        <div class="heroActivity"><GitHubActivity /></div>
+        </div>
         <div class="heroLab">
-        <div class="heroSculpture"><WireframeForms /></div>
         <div class="terminalWindow" aria-label="AI engineering terminal signature">
           <div class="terminalChrome"><span></span><span></span><span></span><p>utkarsh@portfolio:~ <span>type "help" ↵</span></p></div>
           <div class="terminalBody" role="button" tabindex="0" on:click={() => terminalInputEl?.focus({ preventScroll: true })} on:keydown={(event) => {
@@ -516,22 +450,28 @@
     text-transform: uppercase;
   }
 
-  :global(#welcomeHeader h1) {
+  :global(#welcomeHeader) .kineticName {
     color: #f5f1df;
     font-family: "Rubik", sans-serif;
-    font-size: clamp(5rem, 13.5vw, 12.5rem);
-    font-weight: 700;
-    line-height: 0.76;
+    font-size: clamp(4rem, 8.2vw, 8rem);
+    font-weight: 500;
+    letter-spacing: -0.055em;
+    line-height: 1;
     margin: 0;
+    text-align: left;
     text-transform: none;
   }
 
   .kineticName {
     display: grid;
-    gap: 0.18em;
+    gap: 0;
     position: relative;
     z-index: 1;
   }
+
+  .heroComposition { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); align-items:center; gap:clamp(2rem,4vw,4rem); }
+  .heroIdentity,.heroActivity { min-width:0; }
+  @media(max-width:980px) { .heroComposition { grid-template-columns:1fr; gap:3rem; } .heroActivity { max-width:540px; width:100%; } }
 
   .heroWordMask,
   .sectionWordMask {
@@ -553,117 +493,28 @@
   }
 
   .heroWordMask:last-child .heroWord {
-    margin-left: auto;
-    text-align: right;
+    color: #90ead6;
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    text-align: left;
   }
 
   .heroSupport {
     background: transparent !important;
     color: #f5f1df;
     display: block;
-    font-family: "Rubik", sans-serif !important;
-    font-size: clamp(1.3rem, 3vw, 2.6rem) !important;
-    font-weight: 500;
-    line-height: 1.08 !important;
-    margin: clamp(2rem, 5vh, 3.5rem) 0 0 !important;
-    max-width: 780px;
+    font-family: "Lexend", sans-serif !important;
+    font-size: clamp(1.25rem, 2.1vw, 2rem) !important;
+    font-weight: 400;
+    line-height: 1.3 !important;
+    letter-spacing: -0.035em;
+    margin: 1.5rem 0 0 !important;
+    max-width: 640px;
     padding: 0 !important;
     text-align: left !important;
   }
-
-  .heroShape {
-    display: block;
-    pointer-events: none;
-    position: absolute;
-    z-index: 2;
-  }
-
-  .heroShapeOne {
-    background: transparent;
-    border: clamp(0.45rem, 1vw, 0.9rem) solid var(--color-accent);
-    border-radius: 50%;
-    box-sizing: border-box;
-    height: clamp(2.5rem, 6vw, 5.5rem);
-    right: 7%;
-    top: 31%;
-    width: clamp(2.5rem, 6vw, 5.5rem);
-  }
-
-  .heroShapeTwo {
-    background: #ff7f67;
-    height: clamp(1rem, 2.6vw, 2.3rem);
-    left: 45%;
-    rotate: 45deg;
-    top: 18%;
-    width: clamp(1rem, 2.6vw, 2.3rem);
-  }
-
-  .heroCoil {
-    display: block;
-    height: clamp(5.5rem, 11vw, 10rem);
-    left: 26%;
-    pointer-events: none;
-    position: absolute;
-    top: 10%;
-    transform-origin: center;
-    width: clamp(2.8rem, 5.5vw, 5rem);
-    z-index: 2;
-  }
-
-  .heroCoil svg {
-    display: block;
-    height: 100%;
-    overflow: visible;
-    width: 100%;
-  }
-
-  .heroMorphTargets {
-    display: none;
-  }
-
-  .heroCoilGlow,
-  .heroMorphPath {
-    fill: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  .heroCoilGlow {
-    filter: blur(8px);
-    opacity: 0.38;
-    stroke: #ff9bea;
-    stroke-width: 20;
-  }
-
-  .heroMorphPath {
-    stroke: url(#heroCoilGradient);
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    stroke-width: 15;
-  }
-
-  .heroSignal {
-    bottom: 34%;
-    display: grid;
-    gap: 0.35rem;
-    pointer-events: none;
-    position: absolute;
-    right: 18%;
-    rotate: 12deg;
-    z-index: 2;
-  }
-
-  .heroSignalBar {
-    background: linear-gradient(90deg, #90ead6, #ff9bea);
-    border-radius: 999px;
-    display: block;
-    height: clamp(0.55rem, 1.2vw, 1rem);
-    transform-origin: center;
-    width: clamp(2.6rem, 5vw, 4.5rem);
-  }
-
-  .heroSignalBar:nth-child(2) { margin-left: 1rem; width: clamp(3.5rem, 6.5vw, 5.8rem); }
-  .heroSignalBar:nth-child(3) { margin-left: 0.35rem; }
 
   .heroText,
   .heroMeta {
@@ -675,8 +526,8 @@
 
   .heroText {
     color: #c9c7bb;
-    font-size: clamp(1rem, 2vw, 1.35rem);
-    line-height: 1.6;
+    font-size: clamp(1rem, 1.45vw, 1.15rem);
+    line-height: 1.55;
     margin-left: 0;
     max-width: 760px;
     text-align: left;
@@ -692,10 +543,9 @@
   }
 
   .heroMeta span {
-    background: var(--color-card);
-    border: 1px solid var(--color-card-outline);
-    border-radius: 999px;
-    padding: 0.55rem 0.75rem;
+    color: #9a9c90;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
   }
 
   .terminalWindow {
@@ -907,36 +757,15 @@
       padding-top: 12.75rem;
     }
 
-    :global(#welcomeHeader h1) {
-      font-size: clamp(3.8rem, 19vw, 6.4rem);
-      line-height: 0.82;
+    :global(#welcomeHeader) .kineticName {
+      font-size: clamp(3.2rem, 17vw, 6.4rem);
+      line-height: 1;
     }
 
     .brand,
     .heroSupport,
     .heroText {
       text-align: left !important;
-    }
-
-    .heroShapeOne {
-      right: 2%;
-      top: 28%;
-    }
-
-    .heroShapeTwo {
-      left: 55%;
-      top: 15%;
-    }
-
-    .heroCoil {
-      left: auto;
-      right: 5%;
-      top: 16%;
-    }
-
-    .heroSignal {
-      bottom: 44%;
-      right: 6%;
     }
 
     .sectionTitle {
@@ -968,7 +797,7 @@
 
 	@media (max-width: 430px) {
 		:global(#welcomeHeader) {
-			padding-top: 14rem;
+			padding-top: 12rem;
 		}
 
     .terminalBody {
@@ -981,7 +810,7 @@
 	}
 
 	@media (max-width: 320px) {
-		:global(#welcomeHeader h1) {
+		:global(#welcomeHeader) .kineticName {
 			font-size: clamp(3rem, 18vw, 3.6rem);
 		}
 	}
@@ -995,10 +824,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .heroLetter,
-    .heroCoil,
-    .heroMorphPath,
-    .heroSignalBar {
+    .heroLetter {
       opacity: 1 !important;
       transform: none !important;
     }
@@ -1023,8 +849,7 @@
   .heroAction:hover,.heroAction:focus-visible { background:#b6ffe8; color:#080807; box-shadow:.45rem .45rem 0 #ff8068; }
   .heroContact { color:#f5f1df; border-bottom:1px solid #f5f1df50; padding-inline:0!important; }
   .heroContact:hover,.heroContact:focus-visible { color:#90ead6; }
-  .heroLab { align-items:center; display:grid; grid-template-columns:minmax(0,.65fr) minmax(0,1fr); gap:clamp(2rem,5vw,5rem); margin-top:2.5rem; }
-  .heroSculpture { width:100%; max-width:370px; }
+  .heroLab { margin-top:3rem; max-width:760px; }
   .heroLab .terminalWindow { box-sizing:border-box; margin:0; max-width:none; width:100%; border-radius:6px; }
   .terminalChrome p { color:#92978c; flex:1; font-family:var(--font-mono); font-size:.6rem; margin:0 0 0 .5rem; }
   .terminalChrome p span { background:none; color:#90ead6; float:right; height:auto; width:auto; }
@@ -1058,13 +883,7 @@
     .projectFeature { gap:1.75rem; }
     .projectTitle { font-size:clamp(2.3rem,11vw,3.5rem); }
     .projectCopy { padding:.5rem; }
-    .heroWord { transform:none!important; }
-    .heroCoil { top:-1.5rem; right:2%; height:3.5rem; width:1.8rem; }
-    .heroShapeOne { top:23rem; right:2%; }
-    .heroShapeTwo { top:12rem; }
     .heroAvailability { display:none; }
-    .heroLab { grid-template-columns:1fr; gap:2rem; }
-    .heroSculpture { max-width:300px; margin:auto; }
     .heroActions { gap:1rem; }
     .heroActions a { font-size:.65rem; gap:.8rem; padding:.9rem; }
     .heroFootnote { font-size:.48rem; gap:1rem; }
