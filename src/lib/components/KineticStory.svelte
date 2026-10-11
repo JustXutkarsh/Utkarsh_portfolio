@@ -54,7 +54,7 @@
   onDestroy(() => context?.revert());
 </script>
 
-<section class="kineticStory" aria-label="AI engineering motion story">
+<section id="idea-to-system" class="kineticStory" aria-label="AI engineering motion story">
   <div class="statementScene scrollScene">
     <div class="stickyStage statementStage">
       <p class="sceneEyebrow">APPLIED AI · IN MOTION</p>

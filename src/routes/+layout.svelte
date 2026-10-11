@@ -5,7 +5,6 @@
   import Header from "$lib/components/Header.svelte";
   import Cursor from "$lib/components/Cursor.svelte";
   import AIBackground from "$lib/components/AIBackground.svelte";
-  import BootSequence from "$lib/components/BootSequence.svelte";
   import CommandPalette from "$lib/components/CommandPalette.svelte";
   import { portfolioContent } from "$lib/content/portfolio.js";
   import { onMount } from "svelte";
@@ -49,9 +48,11 @@
         window.scrollTo(0, 0);
       });
     }
-    if (!reducedMotion) {
+    if (!reducedMotion && from && to?.url.pathname !== "/") {
       routeTransitioning = true;
       window.setTimeout(() => routeTransitioning = false, 180);
+    } else {
+      routeTransitioning = false;
     }
   });
 
@@ -94,7 +95,6 @@
 <AIBackground />
 <Header />
 <CommandPalette />
-<BootSequence />
 <Cursor />
 
 <div id="smooth-wrapper" bind:this={smoothWrapper}>
@@ -181,11 +181,10 @@
   .routeFrame {
     min-height: 70vh;
     opacity: 1;
-    transition: opacity 180ms ease, transform 180ms ease;
+    transition: transform 180ms ease;
   }
 
   .routeTransitioning {
-    opacity: 0.2;
     transform: translateY(8px);
   }
 
