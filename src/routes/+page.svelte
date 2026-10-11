@@ -2,32 +2,22 @@
   import { onDestroy, onMount, tick } from "svelte";
   import { fetchHomeData, projectImage } from "$lib/logic/data.js";
   import KineticStory from "$lib/components/KineticStory.svelte";
-  import PageHeader from "$lib/components/PageHeader.svelte";
-  import GitHubActivity from "$lib/components/GitHubActivity.svelte";
+  import IdeaEngine from "$lib/components/IdeaEngine.svelte";
+  import { portfolioContent } from "$lib/content/portfolio.js";
   import { interactiveSurface } from "$lib/logic/visualEffects.js";
   import { scrollTo } from "$lib/logic/globalFunctions.js";
   import gsap from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-  let content;
-  let projects = [];
+  let content = portfolioContent;
+  let projects = portfolioContent.projects;
   $: homeProjects = projects.filter((post) => post.homepage);
-  let terminalRows = [];
-  let terminalLiveText = "";
-  let terminalReady = false;
-  let terminalInput = "";
-  let terminalInputEl;
+  const resume = portfolioContent.socials.find((link) => link.label === "Resume").url;
   let cleanup = [];
   let motionContext;
 
   const MAX_CATEGORIES = 2;
   const words = (text) => text.split(" ");
-  const terminalLines = [
-    "$ training catboost_model.pkl... ROC-AUC: 0.819",
-    "$ agent_pipeline: 7/7 agents online",
-    "$ ranking candidates... accuracy: 91.96%",
-    "$ deploying ai_receptionist... booking calls autonomously",
-  ];
   const getCategories = (post) => {
     const visible = post.categories?.slice(0, MAX_CATEGORIES) || [];
     return { visible, hiddenCount: (post.categories?.length || 0) - visible.length };
@@ -57,81 +47,11 @@
   };
   const formatMonthYear = (isoString) => new Date(isoString).toLocaleString(undefined, { month: "short", year: "numeric" });
 
-  function startTerminal(reducedMotion) {
-    if (reducedMotion) {
-      terminalRows = terminalLines;
-      terminalReady = true;
-      return;
-    }
-    let lineIndex = 0;
-    let charIndex = 0;
-    let timer;
-    const step = () => {
-      const line = terminalLines[lineIndex];
-      terminalLiveText = line.slice(0, charIndex);
-      if (charIndex < line.length) {
-        charIndex += 1;
-        timer = window.setTimeout(step, 12);
-        return;
-      }
-      terminalRows = [...terminalRows, line];
-      terminalLiveText = "";
-      lineIndex += 1;
-      charIndex = 0;
-      if (lineIndex >= terminalLines.length) {
-        terminalReady = true;
-        return;
-      }
-      timer = window.setTimeout(step, 180);
-    };
-    step();
-    cleanup.push(() => window.clearTimeout(timer));
-  }
-
-  function terminalLinks(names) {
-    return names.map((name) => {
-      const project = projects.find((item) => item.title === name);
-      return project ? { label: project.title, href: `/projects/${project.slug.current}`, hint: project.summary } : null;
-    }).filter(Boolean);
-  }
-
-  function submitTerminal() {
-    const command = terminalInput.trim();
-    if (!command) return;
-    terminalRows = [...terminalRows, `$ ${command}`];
-    terminalInput = "";
-    const lower = command.toLowerCase();
-    if (lower === "whoami") {
-      terminalRows = [...terminalRows, "Utkarsh Pandey: AI engineer building LLM, RAG, agent, ML, and production automation systems."];
-    } else if (lower === "skills") {
-      terminalRows = [...terminalRows, "LLMs · RAG · multi-agent systems · vector search · ML forecasting · FastAPI · full-stack product delivery"];
-    } else if (lower === "projects") {
-      terminalRows = [...terminalRows, "projects:"];
-      terminalRows = [...terminalRows, ...terminalLinks(projects.map((item) => item.title))];
-    } else if (lower === "contact") {
-      terminalRows = [...terminalRows, "contact:", { label: "utkarshp034@gmail.com", href: "mailto:utkarshp034@gmail.com" }, { label: "GitHub", href: "https://github.com/JustXutkarsh" }, { label: "LinkedIn", href: "https://www.linkedin.com/in/utkarsh-pandey2005/" }];
-    } else if (lower === "help") {
-      terminalRows = [...terminalRows, "available commands: whoami, skills, projects, contact, help"];
-    } else {
-      terminalRows = [...terminalRows, `command not found: ${command}. try 'help'`];
-    }
-    tick().then(() => terminalInputEl?.focus({ preventScroll: true }));
-  }
-
-  function setupMotion(reducedMotion, heroDelay = 0) {
+  function setupMotion(reducedMotion) {
     gsap.registerPlugin(ScrollTrigger);
     if (reducedMotion) return;
 
     motionContext = gsap.context(() => {
-      const hero = gsap.timeline({ delay: heroDelay, defaults: { ease: "power4.out" } });
-      hero
-        .from(".heroLetter", { yPercent: 110, duration: 0.9, stagger: 0.028 })
-        .from(".heroKicker", { autoAlpha: 0, y: 12, duration: 0.5 }, 0.1)
-        .from(".heroSupport, .heroText, .heroMeta", { autoAlpha: 0, y: 18, duration: 0.65, stagger: 0.07 }, 0.35)
-        .from(".heroActions", { autoAlpha: 0, y: 14, duration: 0.6 }, 0.6)
-        .from(".heroActivity", { autoAlpha: 0, y: 20, duration: 0.8 }, 0.55)
-        .from(".terminalWindow", { autoAlpha: 0, y: 24, duration: 0.75 }, 0.7);
-
       gsap.utils.toArray(".revealSection").forEach((section) => {
         const titleWords = section.querySelectorAll(".sectionWord");
         const revealItems = section.querySelectorAll(".experienceRow, .certificateItem, .aboutLine");
@@ -209,18 +129,20 @@
     ScrollTrigger.refresh();
   }
 
-  onMount(async () => {
-    content = await fetchHomeData();
-    projects = [...(content.projects || [])].sort((a, b) => {
-      if ((b.featured === true) !== (a.featured === true)) return (b.featured === true) - (a.featured === true);
-      return new Date(b.created) - new Date(a.created);
-    });
-    await tick();
+  onMount(() => {
+    let active = true;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    startTerminal(reducedMotion);
-    const heroDelay = sessionStorage.getItem("justxutkarshBootSeen") ? 0.12 : 1.7;
-    setupMotion(reducedMotion, heroDelay);
+    try { setupMotion(reducedMotion); } catch { motionContext?.revert(); }
+    // CMS updates enhance already-rendered local content; they never gate the hero.
+    fetchHomeData().then(async (data) => {
+      if (!active) return;
+      content = { ...portfolioContent, ...Object.fromEntries(Object.entries(data).filter(([, value]) => value != null)) };
+      projects = [...content.projects].sort((a, b) => Number(b.featured === true) - Number(a.featured === true) || new Date(b.created) - new Date(a.created));
+      await tick();
+      if (active) ScrollTrigger.refresh();
+    }).catch(() => {});
     if (window.location.hash) scrollTo(window.location.hash);
+    return () => { active = false; };
   });
 
   onDestroy(() => cleanup.forEach((fn) => fn()));
@@ -232,61 +154,24 @@
 
 {#if content}
   <div id="portfolio">
-    <PageHeader id="welcomeHeader">
-      <svg class="heroSpotlight" viewBox="0 0 3787 2842" fill="none" aria-hidden="true">
-        <g filter="url(#portfolioSpotlight)"><ellipse cx="1924.71" cy="273.501" rx="1924.71" ry="273.501" transform="matrix(-0.822377 -0.568943 -0.568943 0.822377 3631.88 2291.09)" fill="#90ead6" fill-opacity="0.21" /></g>
-        <defs><filter id="portfolioSpotlight" x="0" y="0" width="3787" height="2842" filterUnits="userSpaceOnUse"><feGaussianBlur stdDeviation="151" /></filter></defs>
-      </svg>
+    <header id="welcomeHeader" aria-labelledby="heroHeadline">
       <div class="headerContent">
-        <p class="brand heroKicker">{content.hero.brand} · AI ENGINEER <span class="heroAvailability"><i></i> OPEN TO COLLABORATE</span></p>
+        <div class="heroTopline"><span>JUSTXUTKARSH / AI ENGINEER</span><span class="heroAvailability"><i aria-hidden="true"></i> OPEN TO COLLABORATE</span></div>
         <div class="heroComposition">
-        <div class="heroIdentity">
-        <h1 class="kineticName" aria-label={content.hero.name}>
-          {#each words(content.hero.name) as word}
-            <span class="heroWordMask"><span class="heroWord" aria-hidden="true">{#each Array.from(word) as letter}<span class="heroLetter">{letter}</span>{/each}</span></span>
-          {/each}
-        </h1>
-        <h2 class="heroSupport">{content.hero.title}</h2>
-        <p class="heroText">{content.hero.subtitle}</p>
-        <div class="heroMeta">
-          <span>{content.hero.location}</span>
-        </div>
-        <div class="heroActions">
-          <a class="heroAction interactable" href="#projectsSection" on:click|preventDefault={() => scrollTo("#projectsSection")}>Explore my work <span>↘</span></a>
-          <a class="heroContact interactable" href="mailto:utkarshp034@gmail.com">Let's build something <span>↗</span></a>
-        </div>
-        </div>
-        <div class="heroActivity"><GitHubActivity /></div>
-        </div>
-        <div class="heroLab">
-        <div class="terminalWindow" aria-label="AI engineering terminal signature">
-          <div class="terminalChrome"><span></span><span></span><span></span><p>utkarsh@portfolio:~ <span>type "help" ↵</span></p></div>
-          <div class="terminalBody" role="button" tabindex="0" on:click={() => terminalInputEl?.focus({ preventScroll: true })} on:keydown={(event) => {
-            if (event.key === "Enter" || event.key === " ") terminalInputEl?.focus({ preventScroll: true });
-          }}>
-            {#each terminalRows as row}
-              {#if typeof row === "string"}
-                <p>{row}</p>
-              {:else}
-                <p><a href={row.href}>{row.label}</a>{#if row.hint}<span> — {row.hint}</span>{/if}</p>
-              {/if}
-            {/each}
-            {#if terminalLiveText}
-              <p>{terminalLiveText}<span class="terminalCursor">|</span></p>
-            {/if}
-            {#if terminalReady}
-              <form class="terminalPrompt" on:submit|preventDefault={submitTerminal}>
-                <label for="heroTerminalInput">$</label>
-                <input id="heroTerminalInput" bind:this={terminalInputEl} bind:value={terminalInput} autocomplete="off" spellcheck="false" aria-label="Type terminal command" />
-                <span class="terminalCursor">|</span>
-              </form>
-            {/if}
+          <div class="heroIdentity">
+            <p class="heroName">Utkarsh <em>Pandey</em><span>{portfolioContent.hero.location}</span></p>
+            <h1 id="heroHeadline">I turn complex<br class="desktopBreak" /> ideas into<br /> <em>working</em><br class="desktopBreak" /> AI systems<span class="period">.</span></h1>
+            <p class="heroText">From retrieval and reasoning to products people can use.</p>
+            <div class="heroActions">
+              <a class="heroAction" href="#projectsSection" on:click|preventDefault={() => scrollTo("#projectsSection")}>Explore my work <span aria-hidden="true">↗</span></a>
+              <a class="heroResume" href={resume}>Resume <span aria-hidden="true">↗</span></a>
+            </div>
           </div>
+          <IdeaEngine {projects} />
         </div>
-        </div>
-        <div class="heroFootnote"><span>RESEARCH. ENGINEER. SHIP.</span><a href="#aboutSection" on:click|preventDefault={() => scrollTo("#aboutSection")}>SCROLL TO DISCOVER ↓</a></div>
+        <a class="heroFootnote" href="#idea-to-system" on:click|preventDefault={() => scrollTo("#idea-to-system")}><span>AN IDEA IS ONLY THE BEGINNING.</span><span>RETRIEVE → REASON → SHIP <span aria-hidden="true">↓</span></span></a>
       </div>
-    </PageHeader>
+    </header>
 
     <KineticStory skills={skillsAsEntries(content.skills).flatMap(([, items]) => items)} />
 
@@ -426,209 +311,43 @@
 {/if}
 
 <style>
-  :global(#welcomeHeader) {
-    background: #080807;
-    box-sizing: border-box;
-    height: auto;
-    min-height: 100svh;
-    padding: clamp(7rem, 12vh, 9rem) 0 clamp(4rem, 8vh, 6rem);
+  #welcomeHeader { background:#080807; box-sizing:border-box; display:block; min-height:100svh; overflow:clip; padding:7rem 0 2rem; position:relative; }
+  .headerContent { margin:auto; width:min(1180px,92%); }
+  .heroTopline { align-items:center; color:#90ead6; display:flex; font:.6rem var(--font-mono); justify-content:space-between; letter-spacing:.1em; margin-bottom:1.5rem; }
+  .heroAvailability { align-items:center; color:#c7c7bd; display:flex; font-size:.55rem; gap:.6rem; }
+  .heroAvailability i { background:#90ead6; border-radius:50%; height:5px; width:5px; }
+  .heroComposition { align-items:center; display:grid; gap:clamp(2rem,5vw,5rem); grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); }
+  .heroIdentity { min-width:0; }
+  .heroName { color:#f5f1df; font:500 clamp(1.2rem,2vw,1.65rem) "Rubik",sans-serif; letter-spacing:-.04em; margin:0 0 1.5rem; }
+  .heroName em { font:italic 1.15em Georgia,serif; }
+  .heroName>span { color:#9a9c90; display:block; font:.58rem var(--font-mono); letter-spacing:.03em; margin-top:.65rem; }
+  #welcomeHeader #heroHeadline { color:#f5f1df; font-family:"Rubik",sans-serif; font-size:clamp(2.8rem,5vw,5.5rem); font-weight:500; letter-spacing:-.06em; line-height:1.04; margin:0; text-align:left; }
+  #heroHeadline em { color:#90ead6; font-family:Georgia,serif; font-size:1.13em; font-weight:400; letter-spacing:-.055em; }
+  .period { color:#ff8068; }
+  .heroText { color:#b8bcb0; font-size:.95rem; line-height:1.6; margin:1.6rem 0 0; max-width:340px; }
+  .heroActions { align-items:center; display:flex; flex-wrap:wrap; gap:1.6rem; margin-top:1.7rem; }
+  .heroActions a { align-items:center; display:inline-flex; font:.7rem var(--font-mono); gap:1.6rem; min-height:48px; box-sizing:border-box; transition:background .2s,color .2s,transform .2s; }
+  .heroAction { background:#90ead6; color:#080807; padding:.9rem 1.2rem; }
+  .heroAction:hover { background:#f5f1df; transform:translateY(-2px); }
+  .heroResume { border-bottom:1px solid #f5f1df50; color:#f5f1df; }
+  .heroResume:hover { color:#90ead6; }
+  .heroActions a:focus-visible,.heroFootnote:focus-visible { outline:2px solid #ff8068; outline-offset:5px; }
+  .heroFootnote { align-items:center; border-top:1px solid #f5f1df25; color:#9a9c90; display:flex; font:.55rem var(--font-mono); gap:1rem; justify-content:space-between; letter-spacing:.05em; margin-top:1.2rem; padding:1.2rem 0 0; }
+  .heroFootnote>span:last-child { color:#90ead6; }
+  .sectionWordMask { display:block; overflow:hidden; padding-bottom:.08em; }
+  @media(max-width:760px) {
+    #welcomeHeader { padding-top:11.5rem; }
+    .heroTopline { align-items:flex-start; flex-direction:column; gap:.65rem; margin-bottom:1.75rem; }
+    .heroComposition { grid-template-columns:1fr; gap:3rem; }
+    .heroName { margin-bottom:1.2rem; font-size:1.35rem; }
+    #welcomeHeader #heroHeadline { font-size:clamp(2.5rem,10.9vw,4.3rem); }
+    .desktopBreak { display:none; }
+    .heroText { margin-top:1.25rem; }
+    .heroActions { margin-top:1.3rem; }
+    .heroFootnote { align-items:flex-start; flex-direction:column; line-height:1.6; margin-top:1rem; }
   }
-
-  :global(#welcomeHeader .headerContent) {
-    margin: auto;
-    width: min(1180px, 92%);
-  }
-
-  .brand {
-    color: var(--color-accent);
-    font-family: var(--font-mono);
-    font-size: clamp(0.72rem, 1.2vw, 0.9rem);
-    font-weight: 700;
-    letter-spacing: 0;
-    margin: 0 0 1.2rem;
-    text-align: left;
-    text-transform: uppercase;
-  }
-
-  :global(#welcomeHeader) .kineticName {
-    color: #f5f1df;
-    font-family: "Rubik", sans-serif;
-    font-size: clamp(4rem, 8.2vw, 8rem);
-    font-weight: 500;
-    letter-spacing: -0.055em;
-    line-height: 1;
-    margin: 0;
-    text-align: left;
-    text-transform: none;
-  }
-
-  .kineticName {
-    display: grid;
-    gap: 0;
-    position: relative;
-    z-index: 1;
-  }
-
-  .heroComposition { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); align-items:center; gap:clamp(2rem,4vw,4rem); }
-  .heroIdentity,.heroActivity { min-width:0; }
-  @media(max-width:980px) { .heroComposition { grid-template-columns:1fr; gap:3rem; } .heroActivity { max-width:540px; width:100%; } }
-
-  .heroWordMask,
-  .sectionWordMask {
-    display: block;
-    overflow: hidden;
-    padding-bottom: 0.08em;
-  }
-
-  .heroWord {
-    display: block;
-    transform-origin: left bottom;
-    white-space: nowrap;
-  }
-
-  .heroLetter {
-    display: inline-block;
-    transform-origin: 50% 100%;
-    will-change: transform;
-  }
-
-  .heroWordMask:last-child .heroWord {
-    color: #90ead6;
-    font-family: Georgia, "Times New Roman", serif;
-    font-style: italic;
-    font-weight: 400;
-    letter-spacing: -0.025em;
-    text-align: left;
-  }
-
-  .heroSupport {
-    background: transparent !important;
-    color: #f5f1df;
-    display: block;
-    font-family: "Lexend", sans-serif !important;
-    font-size: clamp(1.25rem, 2.1vw, 2rem) !important;
-    font-weight: 400;
-    line-height: 1.3 !important;
-    letter-spacing: -0.035em;
-    margin: 1.5rem 0 0 !important;
-    max-width: 640px;
-    padding: 0 !important;
-    text-align: left !important;
-  }
-
-  .heroText,
-  .heroMeta {
-    color: #f5f1df;
-    margin: 1rem auto 0;
-    max-width: 880px;
-    text-align: center;
-  }
-
-  .heroText {
-    color: #c9c7bb;
-    font-size: clamp(1rem, 1.45vw, 1.15rem);
-    line-height: 1.55;
-    margin-left: 0;
-    max-width: 760px;
-    text-align: left;
-  }
-
-  .heroMeta {
-    justify-content: flex-start;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-left: 0;
-    text-align: left;
-  }
-
-  .heroMeta span {
-    color: #9a9c90;
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-  }
-
-  .terminalWindow {
-    background: #0e0e0c;
-    border: 1px solid color-mix(in srgb, var(--color-accent), transparent 55%);
-    border-radius: 18px;
-    box-shadow: 0 0 34px color-mix(in srgb, var(--color-accent), transparent 84%);
-    margin: clamp(2rem, 6vh, 4rem) 0 0 auto;
-    max-width: 820px;
-    overflow: hidden;
-    text-align: left;
-  }
-
-  .terminalChrome {
-    align-items: center;
-    border-bottom: 1px solid var(--color-card-outline);
-    display: flex;
-    gap: 0.45rem;
-    padding: 0.75rem 1rem;
-  }
-
-  .terminalChrome span {
-    background: var(--color-accent);
-    border-radius: 50%;
-    height: 0.72rem;
-    opacity: 0.85;
-    width: 0.72rem;
-  }
-
-  .terminalBody {
-    background: transparent;
-    border: 0;
-    box-shadow: none;
-    color: #f5f1df;
-    display: block;
-    font-family: var(--font-mono);
-    font-size: clamp(0.78rem, 2vw, 1rem);
-    line-height: 1.6;
-    margin: 0;
-    max-height: 18rem;
-    min-height: 9rem;
-    overflow-y: auto;
-    padding: 1rem;
-  }
-
-  .terminalBody p {
-    margin: 0 0 0.35rem;
-  }
-
-  .terminalBody a {
-    color: var(--color-accent);
-    text-decoration: none;
-  }
-
-  .terminalBody span {
-    color: #a9aaa0;
-  }
-
-  .terminalPrompt {
-    align-items: center;
-    display: flex;
-    gap: 0.45rem;
-    margin-top: 0.35rem;
-  }
-
-  .terminalPrompt label {
-    color: var(--color-accent);
-  }
-
-  .terminalPrompt input {
-    background: transparent;
-    border: 0;
-    color: var(--color-text);
-    flex: 1;
-    font: inherit;
-    min-width: 0;
-    outline: 0;
-  }
-
-  .terminalCursor {
-    animation: blink 1s steps(2, start) infinite;
-    color: var(--color-accent);
-  }
+  @media(min-width:761px) and (max-width:1023px) { #welcomeHeader { padding-top:9rem; } .heroComposition { gap:2rem; } #welcomeHeader #heroHeadline { font-size:4.8vw; } }
+  @media(prefers-reduced-motion:reduce) { .heroActions a { transition:none; } }
 
   .editorialBand{box-sizing:border-box;padding-bottom:clamp(5rem,10vw,10rem);position:relative}.creamBand{background:#f5f1df;color:#0a0b0a}.darkBand{background:#0a0b0a;color:#f5f1df}
 
@@ -753,28 +472,9 @@
   .certificateList{margin:auto;width:min(1120px,92%)}.certificateItem{align-items:center;border-top:1px solid #0a0b0a;display:grid;gap:clamp(1rem,4vw,4rem);grid-template-columns:3rem minmax(280px,1fr) minmax(240px,.65fr);padding:clamp(2rem,4vw,3.5rem) 0}.certificateCopy h2{color:#0a0b0a;font-family:"Rubik",sans-serif;font-size:clamp(1.8rem,3.6vw,3.5rem);line-height:.95;margin:0 0 .75rem}.certificateCopy p{line-height:1.45;margin:0 0 1rem}.certificateMedia{background:#fff;display:block;overflow:hidden}.certPreview{aspect-ratio:16/10;border-radius:0;height:auto;object-fit:contain;position:static;width:100%}
 
   @media (max-width: 760px) {
-    :global(#welcomeHeader) {
-      padding-top: 12.75rem;
-    }
-
-    :global(#welcomeHeader) .kineticName {
-      font-size: clamp(3.2rem, 17vw, 6.4rem);
-      line-height: 1;
-    }
-
-    .brand,
-    .heroSupport,
-    .heroText {
-      text-align: left !important;
-    }
-
     .sectionTitle {
       font-size: clamp(2.65rem, 14vw, 4.7rem);
       padding-top: 5rem;
-    }
-
-    .terminalWindow {
-      border-radius: 14px;
     }
 
     .achievementScene {
@@ -796,13 +496,6 @@
   }
 
 	@media (max-width: 430px) {
-		:global(#welcomeHeader) {
-			padding-top: 12rem;
-		}
-
-    .terminalBody {
-      max-height: 14rem;
-    }
 
 		.achievementIntro h1 {
 			font-size: clamp(3rem, 13vw, 4.4rem);
@@ -816,49 +509,15 @@
 	}
 
   @media (min-width: 761px) and (max-width: 1180px) {
-    :global(#welcomeHeader) {
-      padding-top: 8.75rem;
-    }
 
     .projectFeature{grid-template-columns:1.05fr .95fr}
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .heroLetter {
-      opacity: 1 !important;
-      transform: none !important;
-    }
-
-    .terminalCursor {
-      animation: none;
-    }
 
     .horizontalAchievements{height:auto;overflow:visible}.achievementRail{display:grid;height:auto;width:100%}.achievementPanel,.achievementIntro{min-height:80svh;min-width:0}.achievementPanel::after{left:4%;right:4%;top:auto;width:auto}
   }
 
-  @keyframes blink {
-    50% { opacity: 0; }
-  }
-
-  .heroSpotlight { animation: spotlightIn 1.8s ease-out both; position:absolute; width:110%; height:140%; left:-35%; top:-45%; opacity:.65; pointer-events:none; }
-  .heroAvailability { float:right; display:inline-flex; align-items:center; gap:.6rem; color:#f5f1df; font-size:.62rem; font-weight:400; }
-  .heroAvailability i { background:#90ead6; width:6px; height:6px; border-radius:50%; box-shadow:0 0 14px #90ead6; }
-  .heroActions { align-items:center; display:flex; flex-wrap:wrap; gap:1.5rem; margin-top:1.75rem; }
-  .heroActions a { display:inline-flex; align-items:center; gap:2rem; font-family:var(--font-mono); font-size:.75rem; padding:1rem 1.25rem; }
-  .heroAction { background:#90ead6; border:1px solid #90ead6; color:#080807; box-shadow:.3rem .3rem 0 #ff9bea; }
-  .heroAction:hover,.heroAction:focus-visible { background:#b6ffe8; color:#080807; box-shadow:.45rem .45rem 0 #ff8068; }
-  .heroContact { color:#f5f1df; border-bottom:1px solid #f5f1df50; padding-inline:0!important; }
-  .heroContact:hover,.heroContact:focus-visible { color:#90ead6; }
-  .heroLab { margin-top:3rem; max-width:760px; }
-  .heroLab .terminalWindow { box-sizing:border-box; margin:0; max-width:none; width:100%; border-radius:6px; }
-  .terminalChrome p { color:#92978c; flex:1; font-family:var(--font-mono); font-size:.6rem; margin:0 0 0 .5rem; }
-  .terminalChrome p span { background:none; color:#90ead6; float:right; height:auto; width:auto; }
-  .terminalChrome > span:nth-child(1) { background:#ff8068; }
-  .terminalChrome > span:nth-child(2) { background:#ff9bea; }
-  .heroLab .terminalBody { min-height:12rem; font-size:clamp(.7rem,1vw,.85rem); }
-  .heroLab .terminalPrompt input { color:#f5f1df; }
-  .heroFootnote { align-items:center; border-top:1px solid #f5f1df25; color:#9a9c90; display:flex; font-family:var(--font-mono); font-size:.6rem; justify-content:space-between; letter-spacing:.05em; margin-top:2rem; padding-top:1.2rem; }
-  .heroFootnote a { color:#90ead6; }
   .sectionEyebrow { box-sizing:border-box; font-family:var(--font-mono); font-size:.66rem; letter-spacing:.07em; margin:auto; padding-top:clamp(4rem,8vw,7rem); width:min(1120px,92%); }
   .darkBand .sectionEyebrow { color:#90ead6; }
   .editorialBand .sectionTitle { padding-top:1.5rem; }
@@ -874,7 +533,6 @@
   .projectLink:hover span { transform:translate(4px,-4px); }
   .certificateItem { transition:border-color .3s; }
   .certificateItem:hover { border-color:#176d5d; }
-  @keyframes spotlightIn { from { opacity:0; transform:translate(-12%,-12%) scale(.8); } to { opacity:.65; transform:none; } }
   @media(max-width:760px) {
     .projectIntro { align-items:flex-start; flex-direction:column; gap:1rem; }
     .projectIndex { gap:.4rem; }
@@ -883,13 +541,8 @@
     .projectFeature { gap:1.75rem; }
     .projectTitle { font-size:clamp(2.3rem,11vw,3.5rem); }
     .projectCopy { padding:.5rem; }
-    .heroAvailability { display:none; }
-    .heroActions { gap:1rem; }
-    .heroActions a { font-size:.65rem; gap:.8rem; padding:.9rem; }
-    .heroFootnote { font-size:.48rem; gap:1rem; }
-    .heroSpotlight { width:180%; left:-70%; }
   }
-  @media(prefers-reduced-motion:reduce) { .heroSpotlight { animation:none; } .projectMedia,.projectArtwork,.projectIndex a,.projectGlare,.projectLink span,.surfaceGlow,.experienceRow::after { transition:none; } .projectMedia { transform:none; } }
+  @media(prefers-reduced-motion:reduce) { .projectMedia,.projectArtwork,.projectIndex a,.projectGlare,.projectLink span,.surfaceGlow,.experienceRow::after { transition:none; } .projectMedia { transform:none; } }
 
   @media (min-width: 1024px) {
     .sectionTitle { padding-left: 0; padding-right: 0; }
