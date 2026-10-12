@@ -28,7 +28,7 @@
   const aboutText = (about) => Array.isArray(about)
     ? about.map((item) => typeof item === "string" ? item : item.children?.map((child) => child.text).join("")).filter(Boolean)
     : [];
-  const highlightAbout = (paragraph) => paragraph.split(/(I build AI systems|research|architecture|model or LLM integration|backend APIs|deployment|real user feedback|LLMs|multi-agent systems|RAG|vector databases|OpenAI API|GPT-4o|CLIP|Tavily API|ChromaDB|FAISS|Supabase|Streamlit|Vercel|Render|AI automation|production inference workflows|Full stack engineering|React|Node\.js|APIs|UI\/UX|cloud deployment|usable products)/g);
+  const highlightAbout = (paragraph) => paragraph.split(/(I build AI systems|model or LLM integration|real user feedback|LLMs|multi-agent systems|RAG|vector databases|Full stack engineering|usable products)/g);
   const sortAchievements = (achievements = []) => {
     const hasFlipkart = achievements.some((item) => item.title?.toLowerCase().includes("flipkart grid"));
     return achievements.filter((item) => !(hasFlipkart && item.title?.toLowerCase().includes("hackerearth traffic prediction"))).sort((a, b) => {
@@ -181,7 +181,7 @@
       <h1 class="sectionTitle" aria-label="AI systems, end to end">{#each words("AI systems, end to end") as word}<span class="sectionWordMask"><span class="sectionWord">{word}</span></span>{/each}</h1>
       <div id="aboutLayout">
         {#each aboutText(portfolioContent.about) as paragraph, index}
-          <p class:leadAbout={index === 0} class="aboutLine"><span class="aboutNumber">0{index + 1}</span><span class="aboutCopy">{#each highlightAbout(paragraph) as part, partIndex}{#if partIndex % 2}<mark class:leadHighlight={index === 0}>{part}</mark>{:else}{part}{/if}{/each}</span></p>
+          <p class:leadAbout={index === 0} class="aboutLine"><span class="aboutNumber">0{index + 1}</span><span class="aboutCopy">{#each highlightAbout(paragraph) as part, partIndex}{#if partIndex % 2}<mark class:statement={part === "I build AI systems"} class:outcome={part === "real user feedback" || part === "usable products"}>{part}</mark>{:else}{part}{/if}{/each}</span></p>
         {/each}
       </div>
     </section>
@@ -376,7 +376,10 @@
   }
 
   #aboutLayout{display:grid;gap:0;margin:auto;width:min(1120px,92%)}.aboutLine{border-top:1px solid #0a0b0a;display:grid;font-size:clamp(1.1rem,2.2vw,1.6rem);grid-template-columns:3rem 1fr;line-height:1.5;margin:0;padding:clamp(1.5rem,3vw,2.7rem) 0}.aboutNumber,.rowNumber{font-family:var(--font-mono);font-size:.7rem}.leadAbout{font-family:"Rubik",sans-serif;font-size:clamp(1.8rem,4vw,3.8rem);font-weight:500;line-height:1.08}
-  .aboutCopy{min-width:0}.aboutCopy mark{background:#90ead640;color:#0a0b0a;font-weight:500;padding:0 .08em;box-decoration-break:clone;-webkit-box-decoration-break:clone}.aboutCopy mark.leadHighlight{background:#90ead6}.leadAbout .aboutCopy{max-width:1000px}
+  .aboutCopy{min-width:0}.leadAbout .aboutCopy{max-width:1000px}
+  .aboutCopy mark{background:none;color:inherit;font-weight:500;text-decoration:underline;text-decoration-color:#83d9c4;text-decoration-thickness:.08em;text-underline-offset:.15em;text-decoration-skip-ink:none}
+  .aboutCopy mark.statement{color:#176454;font-weight:600;text-decoration-color:#ff8068;text-decoration-thickness:.045em;text-underline-offset:.12em}
+  .aboutCopy mark.outcome{font-family:Georgia,serif;font-style:italic;font-weight:400;text-decoration-color:#df775f;text-decoration-style:solid;text-decoration-thickness:.05em;text-underline-offset:.16em}
   .experienceList{margin:auto;width:min(1120px,92%)}.experienceRow{border-top:1px solid #4a4b46;display:grid;gap:clamp(1rem,3vw,3rem);grid-template-columns:3rem minmax(240px,.85fr) 1.15fr;padding:clamp(2rem,5vw,4.5rem) 0}.experienceHeading p{color:#90ead6;font-family:var(--font-mono);font-size:.72rem;margin:0}.experienceHeading h2{font-family:"Rubik",sans-serif;font-size:clamp(2rem,4.5vw,4.2rem);line-height:.95;margin:.5rem 0}.experienceHeading h3{color:#ff9bea;font-size:clamp(1rem,1.8vw,1.35rem);margin:0}.experienceRow ul{font-size:clamp(.95rem,1.5vw,1.15rem);line-height:1.55;margin:0;padding-left:1.2rem}.darkBand .rowNumber{color:#90ead6}
   .projectIntro,.projectIndex { margin:0 auto; width:min(1180px,92%); }
   .projectIntro { align-items:flex-end; display:flex; gap:2rem; justify-content:space-between; padding-bottom:2rem; }
