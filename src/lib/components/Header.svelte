@@ -1,7 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import gsap from "gsap";
-  import { scrollTo, playSound, getCSSVariable } from "$lib/logic/globalFunctions.js";
+  import { scrollTo, playSound } from "$lib/logic/globalFunctions.js";
   import { portfolioContent } from "$lib/content/portfolio.js";
 
   let header;
@@ -39,32 +38,13 @@
     window.addEventListener("resize", updateNavigation);
     updateNavigation();
 
+    const hover = () => playSound("hover");
+    const open = () => playSound("openLink");
     links.forEach((item) => {
-      item.addEventListener("mouseenter", () => {
-        playSound("hover");
-        gsap.to(item, { scale: 0.94, duration: 0.2, ease: "power2.out" });
-      });
-      item.addEventListener("mouseleave", () => {
-        gsap.to(item, { scale: 1, duration: 0.2, ease: "power2.out" });
-      });
-      item.addEventListener("mousedown", () => playSound("openLink"));
+      item.addEventListener("mouseenter", hover);
+      item.addEventListener("mousedown", open);
     });
-
-    logoHeader.addEventListener("mouseenter", () => {
-      gsap.to(logoHeader, {
-        color: getCSSVariable("--color-secondary"),
-        rotate: 6,
-        duration: 0.25,
-      });
-    });
-    logoHeader.addEventListener("mouseleave", () => {
-      gsap.to(logoHeader, {
-        color: getCSSVariable("--color-primary"),
-        rotate: 0,
-        duration: 0.25,
-      });
-    });
-    return () => { cancelAnimationFrame(frame); window.removeEventListener("scroll", updateNavigation); window.removeEventListener("resize", updateNavigation); };
+    return () => { links.forEach((item) => { item.removeEventListener("mouseenter", hover); item.removeEventListener("mousedown", open); }); cancelAnimationFrame(frame); window.removeEventListener("scroll", updateNavigation); window.removeEventListener("resize", updateNavigation); };
   });
 </script>
 
@@ -103,9 +83,11 @@
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background: #080807;
-    border: 1px solid #f5f1df;
+    border: 0;
+    border-bottom: 1px solid #f5f1df26;
     border-radius: 0;
-    box-shadow: 0.55rem 0.55rem 0 #90ead6;
+    box-shadow: none;
+    outline: none;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -126,30 +108,7 @@
     isolation: isolate;
   }
 
-  #header::before,
-  #header::after {
-    content: "";
-    position: absolute;
-    pointer-events: none;
-    z-index: -1;
-  }
-
-  #header::before {
-    background: #ff8068;
-    height: 4px;
-    left: -1px;
-    top: -1px;
-    width: calc(var(--progress, 0) * 100%);
-  }
-
-  #header::after {
-    background: #ff9bea;
-    bottom: -0.55rem;
-    height: 0.55rem;
-    right: -0.55rem;
-    width: 9%;
-  }
-
+  #header::before { content:""; position:absolute; bottom:-1px; left:0; height:1px; width:calc(var(--progress,0) * 100%); background:#90ead6; pointer-events:none; }
   #logoHeader {
     color: #90ead6;
     flex: 0 0 auto;
@@ -212,7 +171,9 @@
     transition: background 0.22s ease, color 0.22s ease;
   }
 
-  .headerButton.active { color:#90ead6; background:#90ead615; box-shadow:inset 0 -2px #90ead6; }
+  .headerButton.active { color:#90ead6; background:transparent; box-shadow:inset 0 -1px #90ead6; }
+  .headerButton { margin-left:0; }
+  #header a:focus-visible,#header button:focus-visible { outline:2px solid #ff8068; outline-offset:3px; }
 
   .socialText svg {
     color: #90ead6;
@@ -234,15 +195,15 @@
   .headerButton:focus-visible,
   .socialText:focus-visible,
   .commandHint:focus-visible {
-    background: #90ead6;
+    background: #90ead60c;
     box-shadow: none;
-    color: #080807;
+    color: #90ead6;
   }
 
   .commandHint {
-    background: #ff8068;
-    border: 1px solid #ff8068;
-    color: #080807;
+    background: transparent;
+    border: 1px solid #ff806850;
+    color: #ff8068;
     font-family: var(--font-mono);
     padding-inline: 0.58rem;
   }
@@ -283,16 +244,16 @@
   @media (max-width: 560px) {
     #header {
       border-radius: 0;
-      grid-template-columns: 1fr;
+      grid-template-columns: 36px minmax(0,1fr);
       padding: 0.55rem;
       row-gap: 0.4rem;
       width: calc(100vw - 1.5rem);
     }
 
     #logoHeader {
-      height: 40px;
-      justify-self: center;
-      width: 40px;
+      height: 36px;
+      justify-self: start;
+      width: 36px;
     }
 
     .buttons {
@@ -305,7 +266,7 @@
     }
 
     .socials {
-      grid-column: auto;
+      grid-column: 1 / -1;
       overflow: visible;
       width: 100% !important;
     }

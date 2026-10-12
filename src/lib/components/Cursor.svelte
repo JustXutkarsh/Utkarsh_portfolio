@@ -1,227 +1,43 @@
 <script>
-    import { onMount } from "svelte";
-    import { gsap } from "gsap";
-    let MorphSVGPlugin;
+  import { onMount } from "svelte";
+  let cursor;
 
-    if (typeof window !== "undefined") {
-        import("gsap/MorphSVGPlugin").then((module) => {
-            MorphSVGPlugin = module.default || module.MorphSVGPlugin;
-            gsap.registerPlugin(MorphSVGPlugin);
-        });
-    }
-
-    let pointerWrapper;
-    let touchCursor = false;
-
-    onMount(() => {
-        pointerWrapper.style.display = "none";
-        touchCursor = window.matchMedia("(pointer: coarse)").matches;
-
-        let mouseX = 0,
-            mouseY = 0;
-
-        function updateCursor(e) {
-            if (!pointerWrapper) {
-                return;
-            }
-            if (e.pointerType === "mouse" || e.pointerType === "touch") {
-                pointerWrapper.style.display = "block";
-                mouseX = e.clientX;
-                mouseY = e.clientY;
-            }
-        }
-
-        window.addEventListener("pointermove", updateCursor);
-        window.addEventListener("pointerdown", updateCursor);
-
-        let currentX = 0,
-            currentY = 0;
-
-        let frameId;
-        const animate = () => {
-            if (!pointerWrapper?.isConnected) return;
-            const { width: w, height: h } =
-                pointerWrapper.getBoundingClientRect();
-            currentX += (mouseX - currentX) * 0.15;
-            currentY += (mouseY - currentY) * 0.15;
-            pointerWrapper.style.transform = `translate(${currentX - w / 2}px, ${currentY - h / 2}px)`;
-            frameId = requestAnimationFrame(animate);
-        };
-        frameId = requestAnimationFrame(animate);
-
-        const attachListeners = () => {
-            document.querySelectorAll(".interactable").forEach((el) => {
-                if (!el.dataset.listenerAdded) {
-                    el.addEventListener("mouseenter", () => {
-                        gsap.killTweensOf(pointerWrapper);
-                        gsap.killTweensOf("#cursorPath");
-
-                        gsap.to("#cursorPath", {
-                            duration: 0.5,
-                            morphSVG: "#hoverPath",
-                            ease: "power2.out",
-                        });
-
-                        gsap.to(pointerWrapper, {
-                            duration: 0.3,
-                            width: 70,
-                            height: 70,
-                            ease: "circ.out",
-                        });
-                    });
-
-                    el.addEventListener("mouseleave", () => {
-                        gsap.killTweensOf(pointerWrapper);
-                        gsap.killTweensOf("#cursorPath");
-
-                        gsap.to("#cursorPath", {
-                            duration: 0.3,
-                            morphSVG: "#cursorPathOriginal",
-                            ease: "power2.inOut",
-                        });
-
-                        gsap.to(pointerWrapper, {
-                            opacity: 1,
-                            duration: 0.2,
-                            width: 50,
-                            height: 50,
-                            ease: "circ.out",
-                        });
-                    });
-
-                    el.addEventListener("click", () => {
-                        gsap.killTweensOf(pointerWrapper);
-                        gsap.killTweensOf("#cursorPath");
-
-                        gsap.set("#cursorPath", {
-                            opacity: 1,
-                            morphSVG: "#hoverPath",
-                        });
-
-                        gsap.to("#cursorPath", {
-                            duration: 0.5,
-                            morphSVG: "#clickPath",
-                            ease: "power2.out",
-                            onComplete: () => {
-                                gsap.to("#cursorPath", {
-                                    duration: 0.5,
-                                    morphSVG: "#hoverPath",
-                                    ease: "power2.out",
-                                    onComplete: () => {
-                                        gsap.to("#cursorPath", {
-                                            duration: 0.3,
-                                            morphSVG: "#cursorPathOriginal",
-                                            ease: "power2.inOut",
-                                        });
-
-                                        gsap.to(pointerWrapper, {
-                                            opacity: 1,
-                                            duration: 0.2,
-                                            width: 25,
-                                            height: 25,
-                                            ease: "circ.out",
-                                            onComplete: () => {
-                                                gsap.to(pointerWrapper, {
-                                                    opacity: 1,
-                                                    duration: 0.5,
-                                                    width: 50,
-                                                    height: 50,
-                                                    ease: "power2.out",
-                                                });
-                                            },
-                                        });
-                                    },
-                                });
-
-                                gsap.to(pointerWrapper, {
-                                    duration: 0.3,
-                                    width: 70,
-                                    height: 70,
-                                    ease: "circ.out",
-                                });
-                            },
-                        });
-
-                        gsap.to(pointerWrapper, {
-                            opacity: 0,
-                            duration: 0.3,
-                            width: 100,
-                            height: 100,
-                            ease: "circ.out",
-                        });
-                    });
-
-                    el.dataset.listenerAdded = "true";
-                }
-            });
-        };
-
-        attachListeners();
-        const observer = new MutationObserver(attachListeners);
-        observer.observe(document.body, { childList: true, subtree: true });
-
-        return () => {
-            cancelAnimationFrame(frameId);
-            observer.disconnect();
-            window.removeEventListener("pointermove", updateCursor);
-            window.removeEventListener("pointerdown", updateCursor);
-        };
-    });
+  onMount(() => {
+    const preference = window.matchMedia("(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)");
+    let frame;
+    const hide = () => { cancelAnimationFrame(frame); cursor.style.opacity = "0"; };
+    const move = (event) => {
+      if (!preference.matches || event.pointerType !== "mouse") { hide(); return; }
+      cancelAnimationFrame(frame);
+      const interactive = event.target.closest?.("a, button, input, [role='button']");
+      frame = requestAnimationFrame(() => {
+        cursor.style.transform = `translate(${event.clientX}px, ${event.clientY}px)`;
+        cursor.style.opacity = "1";
+        cursor.classList.toggle("overLink", Boolean(interactive));
+      });
+    };
+    const key = (event) => { if (event.key === "Tab") hide(); };
+    window.addEventListener("pointermove", move, { passive: true });
+    window.addEventListener("blur", hide);
+    window.addEventListener("keydown", key);
+    document.addEventListener("pointerleave", hide);
+    preference.addEventListener("change", hide);
+    return () => {
+      hide();
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("blur", hide);
+      window.removeEventListener("keydown", key);
+      document.removeEventListener("pointerleave", hide);
+      preference.removeEventListener("change", hide);
+    };
+  });
 </script>
 
-<div bind:this={pointerWrapper} class="pointer-wrapper" class:touchCursor>
-    <svg viewBox="0 0 1080 1080">
-        <path
-            id="cursorPath"
-            d="M540,0 C241.8,0,0,241.8,0,540 s241.8,540,540,540,540-241.8,540-540S838.2,0,540,0Z"
-            fill="var(--color-secondary)"
-        />
-        <path
-            id="cursorPathOriginal"
-            d="M540,0 C241.8,0,0,241.8,0,540 s241.8,540,540,540,540-241.8,540-540S838.2,0,540,0Z"
-            fill="none"
-            style="display:none"
-        />
-        <path
-            id="hoverPath"
-            d="M540,0C241.8,0,0,241.8,0,540s241.8,540,540,540,540-241.8,540-540S838.2,0,540,0ZM540,1040.6c-276.5,0-500.6-224.1-500.6-500.6S263.5,39.5,540,39.5s500.6,224.1,500.6,500.6-224.1,500.6-500.6,500.6Z"
-            fill="none"
-            style="display:none"
-        />
-        <path
-            id="clickPath"
-            xmlns="http://www.w3.org/2000/svg"
-            class="cls-1"
-            d="M540,0C241.8,0,0,241.8,0,540s241.8,540,540,540,540-241.8,540-540S838.2,0,540,0ZM540,1069.7c-292.5,0-529.7-237.1-529.7-529.7S247.5,10.3,540,10.3s529.7,237.1,529.7,529.7-237.1,529.7-529.7,529.7Z"
-            fill="none"
-            style="display:none"
-        />
-    </svg>
-</div>
+<div bind:this={cursor} class="pointer-wrapper" aria-hidden="true"><span></span></div>
 
 <style>
-    .pointer-wrapper {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 50px;
-        height: 50px;
-        pointer-events: none;
-        transform-origin: 50% 50%;
-        z-index: 9999;
-    }
-
-    .pointer-wrapper svg {
-        width: 100%;
-        height: 100%;
-    }
-
-    .touchCursor {
-        height: 28px;
-        opacity: 0.82;
-        width: 28px;
-    }
-    @media (max-width: 760px), (pointer: coarse), (prefers-reduced-motion: reduce) {
-        .pointer-wrapper { display: none !important; }
-    }
+  .pointer-wrapper{position:fixed;inset:0 auto auto 0;opacity:0;pointer-events:none;z-index:9999}
+  span{display:block;width:8px;height:8px;border:1px solid #90ead6;border-radius:50%;transform:translate(-50%,-50%);background:transparent;transition:width .2s,height .2s,border-color .2s}
+  .overLink span{width:24px;height:24px;border-color:#ff8068;background:#ff806808}
+  @media(hover:none),(pointer:coarse),(prefers-reduced-motion:reduce){.pointer-wrapper{display:none}}
 </style>
